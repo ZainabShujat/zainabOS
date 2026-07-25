@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import { useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { useTimeStore } from '../lib/engine/store';
 import * as THREE from 'three';
@@ -8,40 +8,35 @@ const TIME_COLORS = {
     ambient: new THREE.Color('#e0f2fe'),
     directional: new THREE.Color('#fdf4ff'),
     intensity: { ambient: 0.15, directional: 3.5 },
-    position: new THREE.Vector3(-25, 5, 2),
-    env: 0.8
+    position: new THREE.Vector3(-25, 5, 2)
   },
   'Afternoon': {
     ambient: new THREE.Color('#ffffff'),
     directional: new THREE.Color('#fffbeb'),
     intensity: { ambient: 0.2, directional: 4.0 },
-    position: new THREE.Vector3(-15, 15, 5),
-    env: 1.0
+    position: new THREE.Vector3(-15, 15, 5)
   },
   'Golden Hour': {
     ambient: new THREE.Color('#fef3c7'),
     directional: new THREE.Color('#ea580c'),
     intensity: { ambient: 0.05, directional: 8.0 },
-    position: new THREE.Vector3(-30, 2, 5),
-    env: 0.6
+    position: new THREE.Vector3(-30, 2, 5)
   },
   'Night': {
     ambient: new THREE.Color('#020205'),
     directional: new THREE.Color('#0a0a2a'),
     intensity: { ambient: 0.01, directional: 0.05 },
-    position: new THREE.Vector3(-15, 10, -5),
-    env: 0.02
+    position: new THREE.Vector3(-15, 10, -5)
   }
 };
 
 export function LightingSystem() {
   const timeOfDay = useTimeStore((state) => state.timeOfDay);
-  const [envIntensity, setEnvIntensity] = React.useState(1);
   
   const ambientRef = useRef<THREE.AmbientLight>(null);
   const directionalRef = useRef<THREE.DirectionalLight>(null);
 
-  useFrame((state, delta) => {
+  useFrame((_, delta) => {
     if (!ambientRef.current || !directionalRef.current) return;
 
     const target = TIME_COLORS[timeOfDay];
@@ -55,11 +50,6 @@ export function LightingSystem() {
     directionalRef.current.color.lerp(target.directional, speed);
     directionalRef.current.intensity = THREE.MathUtils.lerp(directionalRef.current.intensity, target.intensity.directional, speed);
     directionalRef.current.position.lerp(target.position, speed);
-
-    // Env intensity isn't a ref in React Three Fiber easily, so we update state if it drifts
-    if (Math.abs(envIntensity - target.env) > 0.01) {
-      setEnvIntensity(THREE.MathUtils.lerp(envIntensity, target.env, speed));
-    }
   });
 
   return (
