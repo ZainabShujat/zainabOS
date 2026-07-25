@@ -6,6 +6,14 @@ import { create } from 'zustand';
 // ==========================================
 export type TimeOfDay = 'Morning' | 'Afternoon' | 'Golden Hour' | 'Night';
 
+function getLocalTimeOfDay(): TimeOfDay {
+  const hour = new Date().getHours();
+  if (hour >= 6 && hour < 12) return 'Morning';
+  if (hour >= 12 && hour < 17) return 'Afternoon';
+  if (hour >= 17 && hour < 19) return 'Golden Hour';
+  return 'Night';
+}
+
 interface TimeState {
   timeOfDay: TimeOfDay;
   isRealTime: boolean; // If true, matches the user's local clock
@@ -14,8 +22,8 @@ interface TimeState {
 }
 
 export const useTimeStore = create<TimeState>((set) => ({
-  timeOfDay: 'Afternoon', // Default
-  isRealTime: false,
+  timeOfDay: getLocalTimeOfDay(), // Sync with local clock on boot
+  isRealTime: true,
   setTimeOfDay: (time) => set({ timeOfDay: time, isRealTime: false }),
   toggleRealTime: () => set((state) => ({ isRealTime: !state.isRealTime })),
 }));
@@ -64,4 +72,21 @@ export const useVisitorStore = create<VisitorState>((set) => ({
     }
     return state;
   }),
+}));
+
+// ==========================================
+// THE SETTINGS ENGINE
+// ==========================================
+interface SettingsStore {
+  mouseSensitivity: number;
+  setMouseSensitivity: (val: number) => void;
+  moveSpeed: number;
+  setMoveSpeed: (val: number) => void;
+}
+
+export const useSettingsStore = create<SettingsStore>((set) => ({
+  mouseSensitivity: 0.5, // lower default since default might be too fast
+  setMouseSensitivity: (val) => set({ mouseSensitivity: val }),
+  moveSpeed: 10,
+  setMoveSpeed: (val) => set({ moveSpeed: val }),
 }));

@@ -1,11 +1,12 @@
-import React, { useState, useEffect } from 'react';
-import { Canvas } from '@react-three/fiber';
-import { Environment, CameraControls, RoundedBox, Box, Text, ContactShadows, Cylinder, Sky } from '@react-three/drei';
+import React, { useState, useEffect, useRef } from 'react';
+import { Canvas, useFrame } from '@react-three/fiber';
+import { Environment, CameraControls, RoundedBox, Box, Text, ContactShadows, Cylinder, Sky, DragControls } from '@react-three/drei';
+import * as THREE from 'three';
 import { EffectComposer, Bloom, Noise, Vignette } from '@react-three/postprocessing';
 import { UIOverlay } from './components/UIOverlay';
 import { SplashScreen } from './components/SplashScreen';
 import { LightingSystem } from './components/LightingSystem';
-import { useTimeStore } from './lib/engine/store';
+import { useTimeStore, useSettingsStore } from './lib/engine/store';
 
 // ==========================================
 // SCENE & SKY
@@ -72,7 +73,7 @@ function Laptop({ position, rotation, onClick }: { position: [number, number, nu
 
 function WallShelves() {
   return (
-    <group position={[0, 3, -2.4]}>
+    <group position={[-4.5, 3, -2.4]}>
       {/* Middle Left Shelf */}
       <RoundedBox args={[2.5, 0.05, 0.8]} radius={0.02} smoothness={4} position={[-2, 1, 0]} castShadow receiveShadow>
         <meshStandardMaterial color="#6b4423" roughness={0.8} />
@@ -157,9 +158,128 @@ function OpenNotebook({ position, rotation, onClick }: { position: [number, numb
   );
 }
 
+function DraggableLamp() {
+  const timeOfDay = useTimeStore((s) => s.timeOfDay);
+  const isDark = timeOfDay === 'Night' || timeOfDay === 'Golden Hour';
+  
+  // 0 = Off, 1 = Yellow, 2 = White
+  const [lampState, setLampState] = useState(isDark ? 1 : 0);
+
+  // Auto-switch based on time, but user can override
+  useEffect(() => {
+    setLampState(isDark ? 1 : 0);
+  }, [isDark]);
+
+  const color = lampState === 1 ? '#fde047' : lampState === 2 ? '#f8fafc' : '#444';
+  const intensity = lampState !== 0 ? 8 : 0;
+  
+  // To make spotLight target point down, we use a target object
+  const [target] = useState(() => new THREE.Object3D());
+  useEffect(() => {
+    target.position.set(0, -1, 0); // pointing straight down relative to the light
+  }, [target]);
+
+  return (
+    <DragControls axisLock="y" dragLimits={[[-10, 5], [0, 0], [-3, 3]]}>
+      <group 
+        position={[-6, 0, -2.5]}
+        onClick={(e) => { e.stopPropagation(); setLampState((s) => (s + 1) % 3); }}
+        onPointerOver={(e) => { e.stopPropagation(); document.body.style.cursor = 'grab'; }}
+        onPointerOut={(e) => { e.stopPropagation(); document.body.style.cursor = 'auto'; }}
+        onPointerDown={(e) => { e.stopPropagation(); document.body.style.cursor = 'grabbing'; }}
+        onPointerUp={(e) => { e.stopPropagation(); document.body.style.cursor = 'grab'; }}
+      >
+        {/* Clamp Base */}
+        <RoundedBox args={[0.5, 0.4, 0.5]} radius={0.05} smoothness={4} position={[0, -0.1, 0]} castShadow receiveShadow>
+          <meshStandardMaterial color="#111" />
+        </RoundedBox>
+        
+        {/* Main Vertical Stem */}
+        <Cylinder args={[0.04, 0.04, 3]} position={[0, 1.5, 0]} castShadow>
+          <meshStandardMaterial color="#1a1a1a" metalness={0.8} />
+        </Cylinder>
+        
+        {/* Hinge Joint */}
+        <Cylinder args={[0.06, 0.06, 0.1]} position={[0, 3, 0]} rotation={[Math.PI/2, 0, 0]} castShadow>
+           <meshStandardMaterial color="#000" metalness={0.9} />
+        </Cylinder>
+
+        {/* Angled Neck */}
+        <Cylinder args={[0.04, 0.04, 1.5]} position={[0.6, 3.4, 0]} rotation={[0, 0, -Math.PI / 3]} castShadow>
+          <meshStandardMaterial color="#1a1a1a" metalness={0.8} />
+        </Cylinder>
+
+        {/* Top Hinge */}
+        <Cylinder args={[0.06, 0.06, 0.1]} position={[1.2, 3.8, 0]} rotation={[Math.PI/2, 0, 0]} castShadow>
+           <meshStandardMaterial color="#000" metalness={0.9} />
+        </Cylinder>
+
+        {/* Double Light Head (T-Bar) */}
+        <RoundedBox args={[4, 0.05, 0.3]} radius={0.02} smoothness={2} position={[1.2, 3.8, 0]} castShadow>
+          <meshStandardMaterial color="#111" />
+        </RoundedBox>
+        
+        {/* Light emission panels */}
+        <RoundedBox args={[1.8, 0.02, 0.2]} position={[-0.7, 3.78, 0]}>
+          <meshStandardMaterial color={color} emissive={color} emissiveIntensity={intensity * 0.5} />
+        </RoundedBox>
+        <RoundedBox args={[1.8, 0.02, 0.2]} position={[3.1, 3.78, 0]}>
+          <meshStandardMaterial color={color} emissive={color} emissiveIntensity={intensity * 0.5} />
+        </RoundedBox>
+        
+        {/* Actual Lights emitting downwards */}
+        {lampState !== 0 && (
+          <>
+            <primitive object={target} position={[1.2, 3, 0]} />
+            <spotLight position={[-0.7, 3.7, 0]} target={target} color={color} intensity={intensity} distance={25} decay={2} castShadow angle={Math.PI / 2} penumbra={1} />
+            <spotLight position={[3.1, 3.7, 0]} target={target} color={color} intensity={intensity} distance={25} decay={2} castShadow angle={Math.PI / 2} penumbra={1} />
+          </>
+        )}
+      </group>
+    </DragControls>
+  );
+}
+
+function WASDControls({ controlsRef }: { controlsRef: React.MutableRefObject<any> }) {
+  const keys = React.useRef({ w: false, a: false, s: false, d: false });
+  const moveSpeed = useSettingsStore(s => s.moveSpeed);
+  
+  React.useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'w' || e.key === 'W') keys.current.w = true;
+      if (e.key === 'a' || e.key === 'A') keys.current.a = true;
+      if (e.key === 's' || e.key === 'S') keys.current.s = true;
+      if (e.key === 'd' || e.key === 'D') keys.current.d = true;
+    };
+    const handleKeyUp = (e: KeyboardEvent) => {
+      if (e.key === 'w' || e.key === 'W') keys.current.w = false;
+      if (e.key === 'a' || e.key === 'A') keys.current.a = false;
+      if (e.key === 's' || e.key === 'S') keys.current.s = false;
+      if (e.key === 'd' || e.key === 'D') keys.current.d = false;
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
+    };
+  }, []);
+
+  useFrame((_, delta) => {
+    if (!controlsRef.current) return;
+    const speed = moveSpeed * delta;
+    if (keys.current.w) controlsRef.current.forward(speed, true);
+    if (keys.current.s) controlsRef.current.forward(-speed, true);
+    if (keys.current.a) controlsRef.current.truck(-speed, 0, true);
+    if (keys.current.d) controlsRef.current.truck(speed, 0, true);
+  });
+
+  return null;
+}
+
 function MessyOrganizers() {
   return (
-    <group>
+    <group position={[-4.5, 0, 0]}>
       {/* Pink Organizer pushed far back left */}
       <group position={[-2, 0.2, -1.8]} rotation={[0, 0.15, 0]}>
         <RoundedBox args={[1, 0.4, 0.6]} radius={0.05} smoothness={4} castShadow receiveShadow>
@@ -184,38 +304,9 @@ function MessyOrganizers() {
 }
 
 function ScatteredObjects() {
-  const timeOfDay = useTimeStore((s) => s.timeOfDay);
-  const isDark = timeOfDay === 'Night' || timeOfDay === 'Golden Hour';
-  const [lampOn, setLampOn] = useState(isDark);
-
-  // Auto-switch based on time, but user can override
-  useEffect(() => {
-    setLampOn(isDark);
-  }, [isDark]);
-
   return (
-    <group>
-      {/* Sleek Table Lamp */}
-      <group 
-        position={[-6, 0, -2.5]}
-        onClick={(e) => { e.stopPropagation(); setLampOn(!lampOn); }}
-        onPointerOver={(e) => { e.stopPropagation(); document.body.style.cursor = 'pointer'; }}
-        onPointerOut={(e) => { e.stopPropagation(); document.body.style.cursor = 'auto'; }}
-      >
-        <Cylinder args={[0.6, 0.8, 0.05]} position={[0, 0.025, 0]} castShadow><meshStandardMaterial color="#111" /></Cylinder>
-        <Cylinder args={[0.05, 0.05, 2.5]} position={[0, 1.25, 0]} castShadow><meshStandardMaterial color="#c0c0c0" metalness={0.8} roughness={0.2} /></Cylinder>
-        <Cylinder args={[0.8, 0.4, 0.8]} position={[0, 2.5, 0]} castShadow>
-          <meshStandardMaterial color="#111" />
-        </Cylinder>
-        {/* Lamp Bulb */}
-        <Cylinder args={[0.3, 0.7, 0.7]} position={[0, 2.45, 0]}>
-          <meshStandardMaterial color={lampOn ? "#fde047" : "#444"} emissive="#fde047" emissiveIntensity={lampOn ? 2 : 0} />
-        </Cylinder>
-        {/* Lamp Light Source */}
-        {lampOn && (
-          <pointLight position={[0, 2, 0]} color="#fef08a" intensity={3} distance={15} decay={2} castShadow />
-        )}
-      </group>
+    <group position={[-4.5, 0, 0]}>
+      <DraggableLamp />
 
       {/* Water bottle far left front */}
       <Cylinder args={[0.15, 0.15, 1.4]} position={[-5, 0.7, 1]} rotation={[0, 0.2, 0]} castShadow>
@@ -252,49 +343,172 @@ function ScatteredObjects() {
   );
 }
 
+function RoomFurniture() {
+  return (
+    <group position={[-4.5, 0, 0]}>
+      {/* The Rug */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -3.9, 2]} receiveShadow>
+        <planeGeometry args={[18, 16]} />
+        <meshStandardMaterial color="#e2e8f0" roughness={1} />
+      </mesh>
+
+      {/* The Chair */}
+      <group position={[1, -1, 4.5]} rotation={[0, -0.2, 0]}>
+        {/* Seat */}
+        <RoundedBox args={[3, 0.4, 3]} radius={0.1} smoothness={4} position={[0, -0.5, 0]} castShadow receiveShadow>
+          <meshStandardMaterial color="#1e293b" roughness={0.8} />
+        </RoundedBox>
+        {/* Backrest */}
+        <RoundedBox args={[3, 4, 0.4]} radius={0.1} smoothness={4} position={[0, 1.5, 1.5]} castShadow receiveShadow>
+          <meshStandardMaterial color="#1e293b" roughness={0.8} />
+        </RoundedBox>
+        {/* Base / Leg */}
+        <Cylinder args={[0.2, 0.2, 2.5]} position={[0, -2, 0]} castShadow>
+          <meshStandardMaterial color="#c0c0c0" metalness={0.8} roughness={0.2} />
+        </Cylinder>
+        {/* Feet */}
+        <Cylinder args={[1.5, 1.5, 0.2]} position={[0, -3.2, 0]} castShadow>
+          <meshStandardMaterial color="#111" />
+        </Cylinder>
+      </group>
+
+      {/* The Bed (Bottom Left) */}
+      <group position={[-6, -3.5, 14]} rotation={[0, 0, 0]}>
+        {/* Frame */}
+        <RoundedBox args={[7, 1, 10]} radius={0.1} smoothness={4} castShadow receiveShadow>
+          <meshStandardMaterial color="#3f1d13" roughness={0.9} />
+        </RoundedBox>
+        {/* Mattress */}
+        <RoundedBox args={[6.6, 1.2, 9.6]} radius={0.2} smoothness={4} position={[0, 0.5, 0]} castShadow receiveShadow>
+          <meshStandardMaterial color="#f8fafc" roughness={1} />
+        </RoundedBox>
+        {/* Pillows (at the bottom/front wall) */}
+        <RoundedBox args={[2.5, 0.4, 1.5]} radius={0.2} smoothness={4} position={[-1.5, 1.1, 3.5]} rotation={[-0.2, 0, 0]} castShadow>
+          <meshStandardMaterial color="#e2e8f0" roughness={1} />
+        </RoundedBox>
+        <RoundedBox args={[2.5, 0.4, 1.5]} radius={0.2} smoothness={4} position={[1.5, 1.1, 3.5]} rotation={[-0.2, 0, 0]} castShadow>
+          <meshStandardMaterial color="#e2e8f0" roughness={1} />
+        </RoundedBox>
+        {/* Blanket */}
+        <RoundedBox args={[6.8, 0.2, 6]} radius={0.1} smoothness={4} position={[0, 1.15, -2]} castShadow receiveShadow>
+          <meshStandardMaterial color="#334155" roughness={1} />
+        </RoundedBox>
+      </group>
+
+      {/* The Almirah (Wardrobe) (Right Wall, Top) */}
+      <group position={[10.5, 0.5, 0]} rotation={[0, -Math.PI/2, 0]}>
+        <RoundedBox args={[6, 9, 3]} radius={0.1} smoothness={4} castShadow receiveShadow>
+          <meshStandardMaterial color="#3f1d13" roughness={0.9} />
+        </RoundedBox>
+        {/* Doors */}
+        <Box args={[2.9, 8.8, 0.1]} position={[-1.48, 0, 1.5]}><meshStandardMaterial color="#2d130c" /></Box>
+        <Box args={[2.9, 8.8, 0.1]} position={[1.48, 0, 1.5]}><meshStandardMaterial color="#2d130c" /></Box>
+        {/* Handles */}
+        <Cylinder args={[0.05, 0.05, 1]} position={[-0.2, 0, 1.6]} castShadow><meshStandardMaterial color="#c0c0c0" metalness={0.8} /></Cylinder>
+        <Cylinder args={[0.05, 0.05, 1]} position={[0.2, 0, 1.6]} castShadow><meshStandardMaterial color="#c0c0c0" metalness={0.8} /></Cylinder>
+      </group>
+
+      {/* The Sofa (Bottom Right) */}
+      <group position={[8, -3.5, 14]} rotation={[0, Math.PI / 2, 0]}>
+        {/* Base */}
+        <RoundedBox args={[8, 1, 3]} radius={0.1} smoothness={4} position={[0, 0, 0]} castShadow receiveShadow>
+          <meshStandardMaterial color="#94a3b8" roughness={0.8} />
+        </RoundedBox>
+        {/* Seat Cushions */}
+        <RoundedBox args={[3.8, 0.5, 2.8]} radius={0.1} smoothness={4} position={[-1.9, 0.6, 0]} castShadow receiveShadow>
+          <meshStandardMaterial color="#e2e8f0" roughness={0.9} />
+        </RoundedBox>
+        <RoundedBox args={[3.8, 0.5, 2.8]} radius={0.1} smoothness={4} position={[1.9, 0.6, 0]} castShadow receiveShadow>
+          <meshStandardMaterial color="#e2e8f0" roughness={0.9} />
+        </RoundedBox>
+        {/* Backrest */}
+        <RoundedBox args={[8, 3, 1]} radius={0.1} smoothness={4} position={[0, 2, 1]} castShadow receiveShadow>
+          <meshStandardMaterial color="#94a3b8" roughness={0.8} />
+        </RoundedBox>
+        {/* Armrests */}
+        <RoundedBox args={[1, 2, 3]} radius={0.1} smoothness={4} position={[-3.5, 1, 0]} castShadow receiveShadow>
+          <meshStandardMaterial color="#cbd5e1" roughness={0.8} />
+        </RoundedBox>
+        <RoundedBox args={[1, 2, 3]} radius={0.1} smoothness={4} position={[3.5, 1, 0]} castShadow receiveShadow>
+          <meshStandardMaterial color="#cbd5e1" roughness={0.8} />
+        </RoundedBox>
+      </group>
+
+      {/* The Plant (Front Left near window) */}
+      <group position={[-12, -2, 10]}>
+        {/* Pot */}
+        <Cylinder args={[1, 0.8, 2]} position={[0, 0, 0]} castShadow receiveShadow>
+          <meshStandardMaterial color="#ea580c" roughness={0.9} />
+        </Cylinder>
+        {/* Stem */}
+        <Cylinder args={[0.1, 0.1, 5]} position={[0, 2.5, 0]} castShadow>
+          <meshStandardMaterial color="#166534" />
+        </Cylinder>
+        {/* Leaves */}
+        <RoundedBox args={[1.5, 0.1, 2.5]} radius={0.05} position={[0.8, 3, 0]} rotation={[0, 0, 0.3]} castShadow><meshStandardMaterial color="#22c55e" /></RoundedBox>
+        <RoundedBox args={[1.5, 0.1, 2.5]} radius={0.05} position={[-0.8, 4, 0]} rotation={[0, 0, -0.3]} castShadow><meshStandardMaterial color="#22c55e" /></RoundedBox>
+        <RoundedBox args={[1.5, 0.1, 2.5]} radius={0.05} position={[0, 5, 1]} rotation={[-0.3, 0, 0]} castShadow><meshStandardMaterial color="#22c55e" /></RoundedBox>
+      </group>
+
+      {/* The Whiteboard (Soft Board above table) */}
+      <group position={[-4.5, 4, -3.9]}>
+        <Box args={[10, 4, 0.2]} castShadow receiveShadow>
+          <meshStandardMaterial color="#8b5a2b" roughness={1} />
+        </Box>
+        <Box args={[9.6, 3.6, 0.25]} position={[0, 0, 0]}>
+          <meshStandardMaterial color="#f8fafc" roughness={0.8} />
+        </Box>
+        <Text position={[-4, 1, 0.15]} fontSize={0.3} color="#111" maxWidth={8} anchorX="left">
+          {`GOALS (zainabOS)\n\n- Build The Living Architecture\n- Connect Knowledge Graph\n- Capture "Becoming"\n\n[IN PROGRESS]`}
+        </Text>
+      </group>
+    </group>
+  );
+}
+
 function EnclosedArchitecture() {
   return (
-    <group>
+    <group position={[-4.5, 0, 0]}>
       {/* Floor */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -4, 0]} receiveShadow>
-        <planeGeometry args={[40, 40]} />
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -4, 8]} receiveShadow>
+        <planeGeometry args={[30, 30]} />
         <meshStandardMaterial color="#f1f5f9" roughness={0.5} />
       </mesh>
       
       {/* Roof */}
-      <mesh rotation={[Math.PI / 2, 0, 0]} position={[0, 10, 0]} receiveShadow>
-        <planeGeometry args={[40, 40]} />
+      <mesh rotation={[Math.PI / 2, 0, 0]} position={[0, 10, 8]} receiveShadow>
+        <planeGeometry args={[30, 30]} />
         <meshStandardMaterial color="#1e293b" />
       </mesh>
 
       {/* Back Wall (Vertical Pine Wood Panels) */}
-      <mesh position={[0, 3, -2.5]} receiveShadow>
-        <planeGeometry args={[40, 20]} />
+      <mesh position={[0, 3, -4]} receiveShadow>
+        <planeGeometry args={[30, 20]} />
         <meshStandardMaterial color="#d97736" roughness={0.9} />
       </mesh>
       
       {/* Right Wall */}
-      <mesh rotation={[0, -Math.PI / 2, 0]} position={[10, 3, 0]} receiveShadow>
-        <planeGeometry args={[40, 20]} />
+      <mesh rotation={[0, -Math.PI / 2, 0]} position={[12, 3, 8]} receiveShadow>
+        <planeGeometry args={[30, 20]} />
         <meshStandardMaterial color="#1e293b" />
       </mesh>
       
-      {/* Wall behind the camera */}
-      <mesh rotation={[0, Math.PI, 0]} position={[0, 3, 10]} receiveShadow>
-        <planeGeometry args={[40, 20]} />
+      {/* Wall behind the camera (Front Wall) */}
+      <mesh rotation={[0, Math.PI, 0]} position={[0, 3, 23]} receiveShadow>
+        <planeGeometry args={[30, 20]} />
         <meshStandardMaterial color="#1e293b" />
       </mesh>
 
       {/* Left Wall (The Window Wall) */}
-      <group position={[-10, 3, 0]}>
+      <group position={[-12, 3, 8]}>
         {/* Top chunk */}
-        <Box args={[1, 6, 40]} position={[0, 7, 0]} receiveShadow><meshStandardMaterial color="#1e293b" /></Box>
+        <Box args={[1, 6, 30]} position={[0, 7, 0]} receiveShadow><meshStandardMaterial color="#1e293b" /></Box>
         {/* Bottom chunk */}
-        <Box args={[1, 4, 40]} position={[0, -5, 0]} receiveShadow><meshStandardMaterial color="#1e293b" /></Box>
+        <Box args={[1, 4, 30]} position={[0, -5, 0]} receiveShadow><meshStandardMaterial color="#1e293b" /></Box>
         {/* Front chunk */}
-        <Box args={[1, 10, 15]} position={[0, 1, 12.5]} receiveShadow><meshStandardMaterial color="#1e293b" /></Box>
+        <Box args={[1, 10, 10]} position={[0, 1, 10]} receiveShadow><meshStandardMaterial color="#1e293b" /></Box>
         {/* Back chunk */}
-        <Box args={[1, 10, 15]} position={[0, 1, -12.5]} receiveShadow><meshStandardMaterial color="#1e293b" /></Box>
+        <Box args={[1, 10, 10]} position={[0, 1, -10]} receiveShadow><meshStandardMaterial color="#1e293b" /></Box>
         
         {/* The Window Frame (Mullions) */}
         <Box args={[0.2, 10, 0.2]} position={[0, 1, 0]} castShadow><meshStandardMaterial color="#0f172a" /></Box>
@@ -311,7 +525,8 @@ function EnclosedArchitecture() {
 export default function App() {
   const [started, setStarted] = useState(false);
   const [focusedObject, setFocusedObject] = useState<string | null>(null);
-  const cameraControlRef = React.useRef<any>(null);
+  const cameraControlRef = useRef<any>(null);
+  const mouseSensitivity = useSettingsStore(s => s.mouseSensitivity);
   
   // Time controls
   const timeOfDay = useTimeStore((s) => s.timeOfDay);
@@ -361,13 +576,18 @@ export default function App() {
             </EffectComposer>
 
             {/* The Desk Surface */}
-            <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} receiveShadow>
+            <mesh rotation={[-Math.PI / 2, 0, 0]} position={[-4.5, 0, 0]} receiveShadow>
               <planeGeometry args={[15, 8]} />
               <meshStandardMaterial color="#3f1d13" roughness={0.8} />
             </mesh>
+            
+            {/* Left Support Plank */}
+            <Box args={[0.2, 4, 7.8]} position={[-11.9, -2, 0]} castShadow receiveShadow>
+              <meshStandardMaterial color="#3f1d13" roughness={0.9} />
+            </Box>
 
             {/* Desk Underneath (Drawer Unit on Right) */}
-            <group position={[5.4, -2, 0.5]}>
+            <group position={[0.9, -2, 0.5]}>
               <Box args={[4, 4, 6]} castShadow receiveShadow>
                  <meshStandardMaterial color="#3f1d13" roughness={0.9} />
               </Box>
@@ -405,6 +625,7 @@ export default function App() {
 
             <MessyOrganizers />
             <ScatteredObjects />
+            <RoomFurniture />
 
             {/* Camera Controls */}
             <CameraControls 
@@ -413,8 +634,11 @@ export default function App() {
               minPolarAngle={0} 
               maxPolarAngle={Math.PI / 2 + 0.2}
               minDistance={1.5} 
-              maxDistance={12} 
+              maxDistance={35} 
+              azimuthRotateSpeed={mouseSensitivity}
+              polarRotateSpeed={mouseSensitivity}
             />
+            <WASDControls controlsRef={cameraControlRef} />
           </Canvas>
           
           {/* HTML Overlay connecting the 3D scene to the Knowledge Graph */}

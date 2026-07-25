@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTimeStore, useSettingsStore } from '../lib/engine/store';
 
 interface UIOverlayProps {
   focusedObject: string | null;
@@ -8,6 +9,12 @@ interface UIOverlayProps {
 
 export function UIOverlay({ focusedObject, onClose }: UIOverlayProps) {
   const [graphData, setGraphData] = useState<any>(null);
+  const [showSettings, setShowSettings] = useState(false);
+
+  const mouseSensitivity = useSettingsStore(s => s.mouseSensitivity);
+  const setMouseSensitivity = useSettingsStore(s => s.setMouseSensitivity);
+  const moveSpeed = useSettingsStore(s => s.moveSpeed);
+  const setMoveSpeed = useSettingsStore(s => s.setMoveSpeed);
 
   useEffect(() => {
     // Fetch the compiled graph data from the public folder
@@ -18,6 +25,7 @@ export function UIOverlay({ focusedObject, onClose }: UIOverlayProps) {
   }, []);
 
   return (
+    <>
     <AnimatePresence>
       {focusedObject && (
         <motion.div
@@ -93,5 +101,44 @@ export function UIOverlay({ focusedObject, onClose }: UIOverlayProps) {
         </motion.div>
       )}
     </AnimatePresence>
+
+    {/* Settings Modal */}
+    {showSettings && (
+      <div style={{
+        position: 'absolute', bottom: '5rem', left: '1rem',
+        background: 'rgba(17, 17, 17, 0.8)', backdropFilter: 'blur(10px)',
+        padding: '1rem', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.2)',
+        color: 'white', width: '250px', zIndex: 50
+      }}>
+        <h3 style={{ fontSize: '0.9rem', fontWeight: 'bold', marginBottom: '1rem' }}>Controls</h3>
+        <div style={{ marginBottom: '1rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.25rem' }}>
+            <label style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.7)' }}>Look Sensitivity</label>
+            <span style={{ fontSize: '0.75rem' }}>{mouseSensitivity.toFixed(1)}</span>
+          </div>
+          <input type="range" min="0.1" max="2" step="0.1" value={mouseSensitivity} onChange={e => setMouseSensitivity(parseFloat(e.target.value))} style={{ width: '100%' }} />
+        </div>
+        <div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.25rem' }}>
+            <label style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.7)' }}>Move Speed</label>
+            <span style={{ fontSize: '0.75rem' }}>{moveSpeed}</span>
+          </div>
+          <input type="range" min="5" max="30" step="1" value={moveSpeed} onChange={e => setMoveSpeed(parseFloat(e.target.value))} style={{ width: '100%' }} />
+        </div>
+      </div>
+    )}
+
+    {/* Settings Button */}
+    <button 
+      onClick={() => setShowSettings(!showSettings)} 
+      style={{
+        position: 'absolute', bottom: '1rem', left: '1rem', padding: '0.75rem',
+        background: 'rgba(17, 17, 17, 0.5)', border: '1px solid rgba(255,255,255,0.2)',
+        borderRadius: '50%', color: 'white', cursor: 'pointer', zIndex: 50
+      }}
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+    </button>
+    </>
   );
 }
