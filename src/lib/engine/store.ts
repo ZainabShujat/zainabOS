@@ -46,24 +46,36 @@ export const useWeatherStore = create<WeatherState>((set) => ({
 // ==========================================
 // THE VISITOR ENGINE
 // ==========================================
-export type Room = 'Study' | 'Gallery' | 'Archive';
+export type Room = 
+  | 'Study' | 'Hallway' | 'TherapyRoom' | 'ChroniclesLibrary' 
+  | 'FreelanceStudio' | 'GamingCorner' | 'MathCorner' | 'Garage' 
+  | 'CareerCampus' | 'AILab' | 'AstronomyCorner' | 'ThoughtOrchard' 
+  | 'Porch' | 'Garden' | 'ForestPath';
 
 interface VisitorState {
   currentRoom: Room;
+  isTransitioning: boolean;
+  showMap: boolean;
   focusedObjectId: string | null; // e.g., 'laptop', 'notebook', or an Entity ID
   curiosityTrail: string[]; // History of interacted entities
   
   setRoom: (room: Room) => void;
+  setIsTransitioning: (val: boolean) => void;
+  setShowMap: (val: boolean) => void;
   focusObject: (id: string | null) => void;
   addToTrail: (entityId: string) => void;
 }
 
 export const useVisitorStore = create<VisitorState>((set) => ({
   currentRoom: 'Study',
+  isTransitioning: false,
+  showMap: false,
   focusedObjectId: null,
   curiosityTrail: [],
   
   setRoom: (room) => set({ currentRoom: room }),
+  setIsTransitioning: (val) => set({ isTransitioning: val }),
+  setShowMap: (val) => set({ showMap: val }),
   focusObject: (id) => set({ focusedObjectId: id }),
   addToTrail: (entityId) => set((state) => {
     // Only add if it's not the most recent one to prevent duplicates

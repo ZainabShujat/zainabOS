@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useTimeStore, useSettingsStore } from '../lib/engine/store';
+import { useSettingsStore } from '../lib/engine/store';
 
 interface UIOverlayProps {
   focusedObject: string | null;
