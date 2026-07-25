@@ -11,6 +11,7 @@ function Laptop({ position, rotation, onClick }: { position: [number, number, nu
     <group 
       position={position} 
       rotation={rotation} 
+      scale={1.6}
       onClick={(e) => { e.stopPropagation(); onClick(); }}
       onPointerOver={(e) => { e.stopPropagation(); setHovered(true); document.body.style.cursor = 'pointer'; }}
       onPointerOut={(e) => { e.stopPropagation(); setHovered(false); document.body.style.cursor = 'auto'; }}
@@ -282,9 +283,9 @@ function RoomFurniture() {
 
       {/* The Chair */}
       <group 
-        position={[1, 0.5, 4.5]} 
+        position={[1, -1, 4.5]} 
         rotation={[0, -0.2, 0]}
-        onClick={(e) => { e.stopPropagation(); setSitTarget([-3.5, 2.0, 4.5]); }}
+        onClick={(e) => { e.stopPropagation(); setSitTarget([-3.5, 1.0, 4.5], [-3.5, 1.0, 2.0]); }}
         onPointerOver={(e) => { e.stopPropagation(); document.body.style.cursor = 'pointer'; }}
         onPointerOut={(e) => { e.stopPropagation(); document.body.style.cursor = 'auto'; }}
       >
@@ -301,11 +302,11 @@ function RoomFurniture() {
           <meshStandardMaterial color="#1e293b" roughness={0.8} />
         </RoundedBox>
         {/* Base / Leg */}
-        <Cylinder args={[0.2, 0.2, 4]} position={[0, -2.5, 0]} castShadow>
+        <Cylinder args={[0.2, 0.2, 2.5]} position={[0, -1.75, 0]} castShadow>
           <meshStandardMaterial color="#c0c0c0" metalness={0.8} roughness={0.2} />
         </Cylinder>
         {/* Feet */}
-        <Cylinder args={[1.5, 1.5, 0.2]} position={[0, -4.5, 0]} castShadow>
+        <Cylinder args={[1.5, 1.5, 0.2]} position={[0, -3, 0]} castShadow>
           <meshStandardMaterial color="#111" />
         </Cylinder>
       </group>
@@ -350,7 +351,7 @@ function RoomFurniture() {
       <group 
         position={[8, -2.5, 14]} 
         rotation={[0, Math.PI / 2, 0]}
-        onClick={(e) => { e.stopPropagation(); setSitTarget([3.5, 1.0, 14]); }}
+        onClick={(e) => { e.stopPropagation(); setSitTarget([3.5, 1.0, 14], [-3.5, 1.0, 14]); }}
         onPointerOver={(e) => { e.stopPropagation(); document.body.style.cursor = 'pointer'; }}
         onPointerOut={(e) => { e.stopPropagation(); document.body.style.cursor = 'auto'; }}
       >
@@ -515,8 +516,8 @@ export function StudyRoom() {
 
       {/* Lived-in Objects */}
       <Laptop 
-        position={[-3, 0.01, -1]} 
-        rotation={[0, 0.35, 0]}
+        position={[-3.5, 0.01, 2]} 
+        rotation={[0, 0.1, 0]}
         onClick={() => setFocusedObject('laptop')} 
       />
 

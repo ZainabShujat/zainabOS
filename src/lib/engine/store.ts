@@ -60,13 +60,14 @@ interface VisitorState {
   focusedObjectId: string | null; // e.g., 'laptop', 'notebook', or an Entity ID
   curiosityTrail: string[]; // History of interacted entities
   sitTarget: [number, number, number] | null;
+  sitLookAt: [number, number, number] | null;
   
   setRoom: (room: Room) => void;
   setIsTransitioning: (val: boolean) => void;
   setShowMap: (val: boolean) => void;
   focusObject: (id: string | null) => void;
   addToTrail: (entityId: string) => void;
-  setSitTarget: (target: [number, number, number] | null) => void;
+  setSitTarget: (target: [number, number, number] | null, lookAt?: [number, number, number]) => void;
 }
 
 export const useVisitorStore = create<VisitorState>((set) => ({
@@ -77,12 +78,13 @@ export const useVisitorStore = create<VisitorState>((set) => ({
   focusedObjectId: null,
   curiosityTrail: [],
   sitTarget: null,
+  sitLookAt: null,
   
   setRoom: (room) => set((state) => ({ previousRoom: state.currentRoom, currentRoom: room })),
   setIsTransitioning: (val) => set({ isTransitioning: val }),
   setShowMap: (val) => set({ showMap: val }),
   focusObject: (id) => set({ focusedObjectId: id }),
-  setSitTarget: (target) => set({ sitTarget: target }),
+  setSitTarget: (target, lookAt) => set({ sitTarget: target, sitLookAt: lookAt || null }),
   addToTrail: (entityId) => set((state) => {
     // Only add if it's not the most recent one to prevent duplicates
     if (state.curiosityTrail[state.curiosityTrail.length - 1] !== entityId) {

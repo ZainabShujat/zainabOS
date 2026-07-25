@@ -18,7 +18,7 @@ function TherapyFurniture() {
         position={[-3, 0.5, 0]} 
         rotation={[0, Math.PI / 2, 0]} 
         scale={1.2}
-        onClick={(e) => { e.stopPropagation(); setSitTarget([-3, 0.5, 0]); }}
+        onClick={(e) => { e.stopPropagation(); setSitTarget([-3, 0.5, 0], [4, 0.5, 0]); }}
         onPointerOver={(e) => { e.stopPropagation(); document.body.style.cursor = 'pointer'; }}
         onPointerOut={(e) => { e.stopPropagation(); document.body.style.cursor = 'auto'; }}
       >
@@ -45,7 +45,7 @@ function TherapyFurniture() {
         position={[4, 0.5, 0]} 
         rotation={[0, -Math.PI / 2, 0]} 
         scale={1.2}
-        onClick={(e) => { e.stopPropagation(); setSitTarget([4, 0.5, 0]); }}
+        onClick={(e) => { e.stopPropagation(); setSitTarget([4, 0.5, 0], [-3, 0.5, 0]); }}
         onPointerOver={(e) => { e.stopPropagation(); document.body.style.cursor = 'pointer'; }}
         onPointerOut={(e) => { e.stopPropagation(); document.body.style.cursor = 'auto'; }}
       >

@@ -1,6 +1,5 @@
 
 import { Box, Text } from '@react-three/drei';
-import { useVisitorStore } from '../../lib/engine/store';
 import { AnimatedDoor } from '../shared/AnimatedDoor';
 
 export function HallwayRoom() {
@@ -10,17 +9,17 @@ export function HallwayRoom() {
     <group>
       {/* Floor */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -4, 0]} receiveShadow>
-        <planeGeometry args={[10, 100]} />
+        <planeGeometry args={[20, 100]} />
         <meshStandardMaterial color="#475569" roughness={0.7} />
       </mesh>
       
       {/* Walls */}
       {/* Left Wall */}
-      <Box args={[1, 14, 100]} position={[-5.5, 3, 0]} receiveShadow><meshStandardMaterial color="#1e293b" /></Box>
+      <Box args={[1, 14, 100]} position={[-10.5, 3, 0]} receiveShadow><meshStandardMaterial color="#1e293b" /></Box>
       {/* Right Wall */}
-      <Box args={[1, 14, 100]} position={[5.5, 3, 0]} receiveShadow><meshStandardMaterial color="#1e293b" /></Box>
+      <Box args={[1, 14, 100]} position={[10.5, 3, 0]} receiveShadow><meshStandardMaterial color="#1e293b" /></Box>
       {/* End Wall */}
-      <Box args={[10, 14, 1]} position={[0, 3, 50]} receiveShadow><meshStandardMaterial color="#0f172a" /></Box>
+      <Box args={[20, 14, 1]} position={[0, 3, 50]} receiveShadow><meshStandardMaterial color="#0f172a" /></Box>
       
       {/* ======================= */}
       {/* THE DOORS */}
@@ -36,14 +35,14 @@ export function HallwayRoom() {
 
       {/* LEFT WALL DOORS */}
       <AnimatedDoor 
-        position={[-4.8, -4, -20]} 
+        position={[-9.8, -4, -20]} 
         rotation={[0, Math.PI / 2, 0]} 
         targetRoom="TherapyRoom" 
         label="[ The Mental Sanctum ]" 
       />
       
       <AnimatedDoor 
-        position={[-4.8, -4, 10]} 
+        position={[-9.8, -4, 10]} 
         rotation={[0, Math.PI / 2, 0]} 
         targetRoom="ChroniclesLibrary" 
         label="[ Chronicles Library ]" 
@@ -51,14 +50,14 @@ export function HallwayRoom() {
 
       {/* RIGHT WALL DOORS */}
       <AnimatedDoor 
-        position={[4.8, -4, -20]} 
+        position={[9.8, -4, -20]} 
         rotation={[0, -Math.PI / 2, 0]} 
         targetRoom="FreelanceStudio" 
         label="[ Freelance Studio ]" 
       />
 
       <AnimatedDoor 
-        position={[4.8, -4, 10]} 
+        position={[9.8, -4, 10]} 
         rotation={[0, -Math.PI / 2, 0]} 
         targetRoom="AILab" 
         label="[ AI Laboratory ]" 

@@ -1,18 +1,17 @@
-import React, { useState, useRef } from 'react';
+import { useState, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Box, Cylinder, Text } from '@react-three/drei';
 import * as THREE from 'three';
-import { useVisitorStore, RoomType } from '../../lib/engine/store';
+import { useVisitorStore, Room } from '../../lib/engine/store';
 
 interface AnimatedDoorProps {
   position: [number, number, number];
   rotation?: [number, number, number];
-  targetRoom: RoomType;
+  targetRoom: Room;
   label: string;
 }
 
 export function AnimatedDoor({ position, rotation = [0, 0, 0], targetRoom, label }: AnimatedDoorProps) {
-  const [hovered, setHovered] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const setIsTransitioning = useVisitorStore((s) => s.setIsTransitioning);
   const setRoom = useVisitorStore((s) => s.setRoom);
@@ -31,7 +30,7 @@ export function AnimatedDoor({ position, rotation = [0, 0, 0], targetRoom, label
     }, 800);
   };
 
-  useFrame((state, delta) => {
+  useFrame((_, delta) => {
     if (isOpen && doorRef.current) {
       // Smoothly swing the door open to 90 degrees (Math.PI / 2)
       doorRef.current.rotation.y = THREE.MathUtils.damp(doorRef.current.rotation.y, Math.PI / 2, 4, delta);
@@ -40,8 +39,8 @@ export function AnimatedDoor({ position, rotation = [0, 0, 0], targetRoom, label
 
   return (
     <group position={position} rotation={rotation}>
-      {hovered && !isOpen && (
-        <Text position={[0, 4, -0.5]} fontSize={0.3} color="#fbbf24" outlineWidth={0.02} outlineColor="#000">
+      {!isOpen && (
+        <Text position={[0, 10, 0.5]} fontSize={0.8} color="#fbbf24" outlineWidth={0.02} outlineColor="#000">
           {label}
         </Text>
       )}
@@ -56,8 +55,8 @@ export function AnimatedDoor({ position, rotation = [0, 0, 0], targetRoom, label
         ref={doorRef}
         position={[1.9, 0, 0]} // Hinge located at the right edge of the frame
         onClick={(e) => { e.stopPropagation(); handleDoorClick(); }}
-        onPointerOver={(e) => { e.stopPropagation(); if (!isOpen) setHovered(true); document.body.style.cursor = isOpen ? 'auto' : 'pointer'; }}
-        onPointerOut={(e) => { e.stopPropagation(); setHovered(false); document.body.style.cursor = 'auto'; }}
+        onPointerOver={(e) => { e.stopPropagation(); document.body.style.cursor = isOpen ? 'auto' : 'pointer'; }}
+        onPointerOut={(e) => { e.stopPropagation(); document.body.style.cursor = 'auto'; }}
       >
         {/* The Door itself, offset negatively so its edge aligns with the hinge */}
         <Box args={[3.8, 8.8, 0.2]} position={[-1.9, 4.5, 0.1]}>

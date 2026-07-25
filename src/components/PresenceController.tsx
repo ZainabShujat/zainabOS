@@ -62,6 +62,19 @@ export const PresenceController = forwardRef((_, ref) => {
     };
   }, []);
 
+  const sitLookAt = useVisitorStore(s => s.sitLookAt);
+  
+  useEffect(() => {
+    if (sitTarget && sitLookAt && controlsRef.current) {
+      const dummy = new THREE.Camera();
+      dummy.position.set(sitTarget[0], sitTarget[1], sitTarget[2]);
+      dummy.lookAt(sitLookAt[0], sitLookAt[1], sitLookAt[2]);
+      
+      // Directly copy quaternion to avoid Euler gimbal issues
+      camera.quaternion.copy(dummy.quaternion);
+    }
+  }, [sitTarget, sitLookAt, camera]);
+
   useFrame((_, delta) => {
     if (sitTarget) {
       // Lerp to sit target
