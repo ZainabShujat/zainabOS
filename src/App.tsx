@@ -1,12 +1,12 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { Canvas, useFrame } from '@react-three/fiber';
+import { useState, useRef, useEffect } from 'react';
+import { Canvas } from '@react-three/fiber';
 import { Environment, Sky } from '@react-three/drei';
 import { EffectComposer, Bloom, Noise, Vignette } from '@react-three/postprocessing';
 import { UIOverlay } from './components/UIOverlay';
 import { SplashScreen } from './components/SplashScreen';
 import { LightingSystem } from './components/LightingSystem';
 import { PresenceController } from './components/PresenceController';
-import { useTimeStore, useSettingsStore, useVisitorStore } from './lib/engine/store';
+import { useTimeStore, useVisitorStore } from './lib/engine/store';
 import { SceneRouter } from './components/SceneRouter';
 import { LiveMapUI } from './components/LiveMapUI';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -26,43 +26,6 @@ function DynamicSky() {
     [-15, -10, -5]; // Night (sun below horizon)
   
   return <Sky distance={450000} sunPosition={sunPosition} mieCoefficient={timeOfDay === 'Night' ? 0.05 : 0.005} rayleigh={timeOfDay === 'Night' ? 0.1 : 2} />;
-}
-
-function WASDControls({ controlsRef }: { controlsRef: React.MutableRefObject<any> }) {
-  const keys = useRef({ w: false, a: false, s: false, d: false });
-  const moveSpeed = useSettingsStore(s => s.moveSpeed);
-  
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'w' || e.key === 'W') keys.current.w = true;
-      if (e.key === 'a' || e.key === 'A') keys.current.a = true;
-      if (e.key === 's' || e.key === 'S') keys.current.s = true;
-      if (e.key === 'd' || e.key === 'D') keys.current.d = true;
-    };
-    const handleKeyUp = (e: KeyboardEvent) => {
-      if (e.key === 'w' || e.key === 'W') keys.current.w = false;
-      if (e.key === 'a' || e.key === 'A') keys.current.a = false;
-      if (e.key === 's' || e.key === 'S') keys.current.s = false;
-      if (e.key === 'd' || e.key === 'D') keys.current.d = false;
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    window.addEventListener('keyup', handleKeyUp);
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-      window.removeEventListener('keyup', handleKeyUp);
-    };
-  }, []);
-
-  useFrame((_, delta) => {
-    if (!controlsRef.current) return;
-    const speed = moveSpeed * delta;
-    if (keys.current.w) controlsRef.current.forward(speed, true);
-    if (keys.current.s) controlsRef.current.forward(-speed, true);
-    if (keys.current.a) controlsRef.current.truck(-speed, 0, true);
-    if (keys.current.d) controlsRef.current.truck(speed, 0, true);
-  });
-
-  return null;
 }
 
 // ==========================================
@@ -110,7 +73,6 @@ export default function App() {
   const currentRoom = useVisitorStore(s => s.currentRoom);
   const previousRoom = useVisitorStore(s => s.previousRoom);
   const cameraControlRef = useRef<any>(null);
-  const mouseSensitivity = useSettingsStore(s => s.mouseSensitivity);
   
   // Time controls
   const timeOfDay = useTimeStore((s) => s.timeOfDay);
