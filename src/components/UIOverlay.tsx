@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useSettingsStore } from '../lib/engine/store';
+import { useSettingsStore, useVisitorStore } from '../lib/engine/store';
 
 interface UIOverlayProps {
   focusedObject: string | null;
@@ -10,6 +10,7 @@ interface UIOverlayProps {
 export function UIOverlay({ focusedObject, onClose }: UIOverlayProps) {
   const [graphData, setGraphData] = useState<any>(null);
   const [showSettings, setShowSettings] = useState(false);
+  const sitTarget = useVisitorStore(s => s.sitTarget);
 
   const mouseSensitivity = useSettingsStore(s => s.mouseSensitivity);
   const setMouseSensitivity = useSettingsStore(s => s.setMouseSensitivity);
@@ -125,6 +126,18 @@ export function UIOverlay({ focusedObject, onClose }: UIOverlayProps) {
           </div>
           <input type="range" min="5" max="30" step="1" value={moveSpeed} onChange={e => setMoveSpeed(parseFloat(e.target.value))} style={{ width: '100%' }} />
         </div>
+      </div>
+    )}
+
+    {/* Sit Overlay */}
+    {sitTarget && (
+      <div style={{
+        position: 'absolute', bottom: '15%', left: '50%', transform: 'translateX(-50%)',
+        background: 'rgba(0,0,0,0.7)', padding: '0.8rem 1.5rem', borderRadius: '2rem',
+        color: '#fbbf24', border: '1px solid rgba(251, 191, 36, 0.3)', backdropFilter: 'blur(10px)',
+        pointerEvents: 'none', zIndex: 100, fontSize: '1.2rem', fontWeight: 'bold'
+      }}>
+        [ Press E to Stand ]
       </div>
     )}
 

@@ -1,10 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
-import { Environment, CameraControls, Sky } from '@react-three/drei';
+import { Environment, Sky } from '@react-three/drei';
 import { EffectComposer, Bloom, Noise, Vignette } from '@react-three/postprocessing';
 import { UIOverlay } from './components/UIOverlay';
 import { SplashScreen } from './components/SplashScreen';
 import { LightingSystem } from './components/LightingSystem';
+import { PresenceController } from './components/PresenceController';
 import { useTimeStore, useSettingsStore, useVisitorStore } from './lib/engine/store';
 import { SceneRouter } from './components/SceneRouter';
 import { LiveMapUI } from './components/LiveMapUI';
@@ -106,6 +107,8 @@ export default function App() {
   const [started, setStarted] = useState(false);
   const focusedObjectId = useVisitorStore(s => s.focusedObjectId);
   const setFocusedObject = useVisitorStore(s => s.focusObject);
+  const currentRoom = useVisitorStore(s => s.currentRoom);
+  const previousRoom = useVisitorStore(s => s.previousRoom);
   const cameraControlRef = useRef<any>(null);
   const mouseSensitivity = useSettingsStore(s => s.mouseSensitivity);
   
@@ -117,7 +120,7 @@ export default function App() {
     setFocusedObject(null);
   };
 
-  // The Camera Swoop Logic
+  // The Camera Swoop Logic & Dynamic Spawning
   useEffect(() => {
     if (cameraControlRef.current && started) {
       if (focusedObjectId === 'laptop') {
@@ -127,11 +130,38 @@ export default function App() {
         // Swoop to notebook pages
         cameraControlRef.current.setLookAt(2.5, 0.8, 1.8, 2.5, 0, 1, true);
       } else {
-        // Reset to default room view (standing height, looking straight ahead)
-        cameraControlRef.current.setLookAt(0, 3, 10, 0, 3, 0, true);
+        // Dynamic Room Spawning based on where the user just came from
+        if (currentRoom === 'Study' && previousRoom === 'Hallway') {
+           cameraControlRef.current.setLookAt(-1, 3.0, 21.5, -1, 3.0, 0, true);
+        } else if (currentRoom === 'Hallway') {
+           if (previousRoom === 'Study') {
+             cameraControlRef.current.setLookAt(0, 3.0, -48, 0, 3.0, 0, true);
+           } else if (previousRoom === 'TherapyRoom') {
+             cameraControlRef.current.setLookAt(-3, 3.0, -20, 5, 3.0, -20, true);
+           } else if (previousRoom === 'ChroniclesLibrary') {
+             cameraControlRef.current.setLookAt(-3, 3.0, 10, 5, 3.0, 10, true);
+           } else if (previousRoom === 'FreelanceStudio') {
+             cameraControlRef.current.setLookAt(3, 3.0, -20, -5, 3.0, -20, true);
+           } else if (previousRoom === 'AILab') {
+             cameraControlRef.current.setLookAt(3, 3.0, 10, -5, 3.0, 10, true);
+           } else if (previousRoom === 'AstronomyCorner') {
+             cameraControlRef.current.setLookAt(-2, 3.0, 48, -2, 3.0, 0, true);
+           } else if (previousRoom === 'MathCorner') {
+             cameraControlRef.current.setLookAt(2, 3.0, 48, 2, 3.0, 0, true);
+           } else {
+             cameraControlRef.current.setLookAt(0, 3.0, 0, 0, 3.0, -10, true);
+           }
+        } else if (previousRoom === 'Hallway') {
+           // We just entered a placeholder room from the Hallway. 
+           // The placeholder door is at z = 9.8, so spawn at z = 8 facing z = -2
+           cameraControlRef.current.setLookAt(0, 3.0, 8, 0, 3.0, -2, true);
+        } else {
+           // Default Room spawn
+           cameraControlRef.current.setLookAt(0, 3.0, 10, 0, 3.0, 0, true);
+        }
       }
     }
-  }, [focusedObjectId, started]);
+  }, [focusedObjectId, started, currentRoom, previousRoom]);
 
   return (
     <div style={{ width: '100vw', height: '100vh', backgroundColor: '#0a0a0a', position: 'relative' }}>
@@ -139,7 +169,7 @@ export default function App() {
       
       {started && (
         <>
-          <Canvas shadows camera={{ position: [0, 3, 10], fov: 45 }} onPointerMissed={handlePointerMissed}>
+          <Canvas shadows camera={{ position: [0, 1.5, 10], fov: 45 }} onPointerMissed={handlePointerMissed}>
             
             <color attach="background" args={['#d1d5db']} />
             <DynamicSky />
@@ -157,18 +187,23 @@ export default function App() {
             <SceneRouter />
 
             {/* Camera Controls - Strictly confined to embodied limits */}
-            <CameraControls 
-              ref={cameraControlRef}
-              makeDefault 
-              minPolarAngle={Math.PI / 4} // Don't let them look straight up at the void
-              maxPolarAngle={Math.PI / 2 - 0.05} // Don't let them look below the floor
-              minDistance={1} 
-              maxDistance={12} // Restrict zoom out so they stay inside the room boundaries
-              azimuthRotateSpeed={mouseSensitivity}
-              polarRotateSpeed={mouseSensitivity}
-            />
-            <WASDControls controlsRef={cameraControlRef} />
+            <PresenceController ref={cameraControlRef} />
           </Canvas>
+          
+          {/* Central Reticle (Crosshair) */}
+          <div style={{
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            width: '6px',
+            height: '6px',
+            backgroundColor: 'rgba(255, 255, 255, 0.8)',
+            borderRadius: '50%',
+            border: '1px solid rgba(0, 0, 0, 0.5)',
+            pointerEvents: 'none',
+            zIndex: 1000
+          }} />
           
           {/* HTML Overlay connecting the 3D scene to the Knowledge Graph */}
           <UIOverlay focusedObject={focusedObjectId} onClose={() => setFocusedObject(null)} />

@@ -54,29 +54,35 @@ export type Room =
 
 interface VisitorState {
   currentRoom: Room;
+  previousRoom: Room | null;
   isTransitioning: boolean;
   showMap: boolean;
   focusedObjectId: string | null; // e.g., 'laptop', 'notebook', or an Entity ID
   curiosityTrail: string[]; // History of interacted entities
+  sitTarget: [number, number, number] | null;
   
   setRoom: (room: Room) => void;
   setIsTransitioning: (val: boolean) => void;
   setShowMap: (val: boolean) => void;
   focusObject: (id: string | null) => void;
   addToTrail: (entityId: string) => void;
+  setSitTarget: (target: [number, number, number] | null) => void;
 }
 
 export const useVisitorStore = create<VisitorState>((set) => ({
   currentRoom: 'Study',
+  previousRoom: null,
   isTransitioning: false,
   showMap: false,
   focusedObjectId: null,
   curiosityTrail: [],
+  sitTarget: null,
   
-  setRoom: (room) => set({ currentRoom: room }),
+  setRoom: (room) => set((state) => ({ previousRoom: state.currentRoom, currentRoom: room })),
   setIsTransitioning: (val) => set({ isTransitioning: val }),
   setShowMap: (val) => set({ showMap: val }),
   focusObject: (id) => set({ focusedObjectId: id }),
+  setSitTarget: (target) => set({ sitTarget: target }),
   addToTrail: (entityId) => set((state) => {
     // Only add if it's not the most recent one to prevent duplicates
     if (state.curiosityTrail[state.curiosityTrail.length - 1] !== entityId) {

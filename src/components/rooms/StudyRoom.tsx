@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { RoundedBox, Box, Text, ContactShadows, Cylinder, DragControls } from '@react-three/drei';
 import * as THREE from 'three';
 import { useTimeStore, useVisitorStore } from '../../lib/engine/store';
+import { AnimatedDoor } from '../shared/AnimatedDoor';
 
 function Laptop({ position, rotation, onClick }: { position: [number, number, number], rotation: [number, number, number], onClick: () => void }) {
   const [hovered, setHovered] = useState(false);
@@ -270,6 +271,7 @@ function ScatteredObjects() {
 }
 
 function RoomFurniture() {
+  const setSitTarget = useVisitorStore(s => s.setSitTarget);
   return (
     <group position={[-4.5, 0, 0]}>
       {/* The Rug */}
@@ -279,7 +281,17 @@ function RoomFurniture() {
       </mesh>
 
       {/* The Chair */}
-      <group position={[1, -1, 4.5]} rotation={[0, -0.2, 0]}>
+      <group 
+        position={[1, 0.5, 4.5]} 
+        rotation={[0, -0.2, 0]}
+        onClick={(e) => { e.stopPropagation(); setSitTarget([-3.5, 2.0, 4.5]); }}
+        onPointerOver={(e) => { e.stopPropagation(); document.body.style.cursor = 'pointer'; }}
+        onPointerOut={(e) => { e.stopPropagation(); document.body.style.cursor = 'auto'; }}
+      >
+        {/* Floating Prompt */}
+        <Text position={[0, 2.5, 0]} fontSize={0.2} color="#fbbf24" outlineWidth={0.01} outlineColor="#000">
+          [ Sit ]
+        </Text>
         {/* Seat */}
         <RoundedBox args={[3, 0.4, 3]} radius={0.1} smoothness={4} position={[0, -0.5, 0]} castShadow receiveShadow>
           <meshStandardMaterial color="#1e293b" roughness={0.8} />
@@ -289,11 +301,11 @@ function RoomFurniture() {
           <meshStandardMaterial color="#1e293b" roughness={0.8} />
         </RoundedBox>
         {/* Base / Leg */}
-        <Cylinder args={[0.2, 0.2, 2.5]} position={[0, -2, 0]} castShadow>
+        <Cylinder args={[0.2, 0.2, 4]} position={[0, -2.5, 0]} castShadow>
           <meshStandardMaterial color="#c0c0c0" metalness={0.8} roughness={0.2} />
         </Cylinder>
         {/* Feet */}
-        <Cylinder args={[1.5, 1.5, 0.2]} position={[0, -3.2, 0]} castShadow>
+        <Cylinder args={[1.5, 1.5, 0.2]} position={[0, -4.5, 0]} castShadow>
           <meshStandardMaterial color="#111" />
         </Cylinder>
       </group>
@@ -335,7 +347,16 @@ function RoomFurniture() {
       </group>
 
       {/* The Sofa (Bottom Right) */}
-      <group position={[8, -3.5, 14]} rotation={[0, Math.PI / 2, 0]}>
+      <group 
+        position={[8, -2.5, 14]} 
+        rotation={[0, Math.PI / 2, 0]}
+        onClick={(e) => { e.stopPropagation(); setSitTarget([3.5, 1.0, 14]); }}
+        onPointerOver={(e) => { e.stopPropagation(); document.body.style.cursor = 'pointer'; }}
+        onPointerOut={(e) => { e.stopPropagation(); document.body.style.cursor = 'auto'; }}
+      >
+        <Text position={[0, 4, 1]} rotation={[0, -Math.PI/2, 0]} fontSize={0.3} color="#fbbf24" outlineWidth={0.01} outlineColor="#000">
+          [ Sit ]
+        </Text>
         {/* Base */}
         <RoundedBox args={[8, 1, 3]} radius={0.1} smoothness={4} position={[0, 0, 0]} castShadow receiveShadow>
           <meshStandardMaterial color="#94a3b8" roughness={0.8} />
@@ -395,47 +416,7 @@ function RoomFurniture() {
   );
 }
 
-function DoorToHallway() {
-  const [hovered, setHovered] = useState(false);
-  const setIsTransitioning = useVisitorStore((s) => s.setIsTransitioning);
-  const setRoom = useVisitorStore((s) => s.setRoom);
 
-  const handleDoorClick = () => {
-    setIsTransitioning(true);
-    // After fade to black, change room
-    setTimeout(() => {
-      setRoom('Hallway');
-    }, 1000);
-  };
-
-  return (
-    <group 
-      position={[-1, -4, 22.8]} 
-      rotation={[0, Math.PI, 0]}
-      onClick={(e) => { e.stopPropagation(); handleDoorClick(); }}
-      onPointerOver={(e) => { e.stopPropagation(); setHovered(true); document.body.style.cursor = 'pointer'; }}
-      onPointerOut={(e) => { e.stopPropagation(); setHovered(false); document.body.style.cursor = 'auto'; }}
-    >
-      {hovered && (
-        <Text position={[0, 4, 0]} fontSize={0.3} color="#fbbf24" outlineWidth={0.02} outlineColor="#000">
-          [ Open Door to Hallway ]
-        </Text>
-      )}
-      {/* Door Frame */}
-      <Box args={[4.2, 7.2, 0.4]} position={[0, 3.5, 0]}>
-        <meshStandardMaterial color="#1f150e" />
-      </Box>
-      {/* The Door itself */}
-      <Box args={[3.8, 6.8, 0.2]} position={[0, 3.5, 0.1]}>
-        <meshStandardMaterial color="#3f1d13" />
-      </Box>
-      {/* Doorknob */}
-      <Cylinder args={[0.1, 0.1, 0.2]} position={[-1.5, 3.5, 0.2]} rotation={[Math.PI/2, 0, 0]}>
-        <meshStandardMaterial color="#c0c0c0" metalness={0.8} />
-      </Cylinder>
-    </group>
-  );
-}
 
 function EnclosedArchitecture() {
   return (
@@ -482,7 +463,12 @@ function EnclosedArchitecture() {
         <Box args={[0.2, 0.2, 10]} position={[0, 1, 0]} castShadow><meshStandardMaterial color="#0f172a" /></Box>
       </group>
 
-      <DoorToHallway />
+      <AnimatedDoor 
+        position={[-1, -4, 22.8]} 
+        rotation={[0, Math.PI, 0]} 
+        targetRoom="Hallway" 
+        label="[ Open Door to Hallway ]" 
+      />
     </group>
   );
 }

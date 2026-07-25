@@ -43,21 +43,19 @@ export function LiveMapUI() {
           
           <div style={{ fontFamily: 'monospace', whiteSpace: 'pre', fontSize: '1rem', lineHeight: '1.5rem', color: '#64748b' }}>
 {`
-                         Astronomy Corner
-                                │
-                        Forest Path ── Thought Orchard
-                                │
-      Career Campus ─── Garden / Porch ─── AI Laboratory
-                                │
-                      YOUR HOUSE (Ground Floor)
-        ┌─────────────────────────────────────────────────────┐
-        │                                                     │
-        │  [Therapy Room] ─── [Hallway] ─── [Freelance Studio]│
-        │                        │                            │
-        │  [Math Corner]  ─── [Foyer]       ── [Chronicles]   │
-        │       │                │              │             │
-        │   [Garage]        [Entrance]      [Gaming Corner]   │
-        └─────────────────────────────────────────────────────┘
+                   [Astronomy Corner]       [Math Corner]
+                             │                    │
+                      ┌──────┴────────────────────┴──────┐
+                      │                                  │
+ [Chronicles Library] ├──          [The Hallway]         ┤── [AI Laboratory]
+                      │                                  │
+                      │                                  │
+       [Therapy Room] ├──                                ┤── [Freelance Studio]
+                      │                                  │
+                      └──────────────────┬───────────────┘
+                                         │
+                                      [Study]
+                                      (Foyer)
 `}
           </div>
 
