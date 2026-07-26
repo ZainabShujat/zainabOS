@@ -1,10 +1,14 @@
 import { Box, RoundedBox, Cylinder, Text, ContactShadows } from '@react-three/drei';
 import { AnimatedDoor } from '../shared/AnimatedDoor';
 import * as THREE from 'three';
-import { useVisitorStore } from '../../lib/engine/store';
+import { useTimeStore, useSettingsStore, useVisitorStore } from '../../lib/engine/store';
+import { InteractiveProp } from '../shared/InteractiveProp';
+import { Caretaker } from '../shared/Caretaker';
+import { playCushionSound } from '../../lib/audio';
 
 function TherapyFurniture() {
   const setSitTarget = useVisitorStore(s => s.setSitTarget);
+  const sessionBooked = useVisitorStore(s => s.sessionBooked);
   return (
     <group position={[0, -4, 0]}>
       {/* Soft circular rug */}
@@ -64,6 +68,20 @@ function TherapyFurniture() {
         <RoundedBox args={[1, 1.5, 3]} radius={0.2} smoothness={4} position={[1.5, 1, 0]} castShadow receiveShadow>
           <meshStandardMaterial color="#92400e" roughness={0.9} />
         </RoundedBox>
+        {/* Caretaker spawns here if booked */}
+        {sessionBooked && (
+          <InteractiveProp 
+            id="caretaker_ai" 
+            label="[ Talk to Caretaker ]" 
+            position={[0, 1.8, 0]} 
+            onClick={() => {
+               // Placeholder for actual AI chat logic
+               alert("Caretaker: Long day?");
+            }}
+          >
+            <Caretaker />
+          </InteractiveProp>
+        )}
       </group>
 
       {/* Low Coffee Table */}
@@ -75,14 +93,59 @@ function TherapyFurniture() {
           <meshStandardMaterial color="#111" />
         </Cylinder>
         {/* Tissue Box */}
-        <Box args={[0.6, 0.3, 0.6]} position={[0, 1.45, 0]} rotation={[0, 0.4, 0]} castShadow>
-          <meshStandardMaterial color="#e2e8f0" />
-        </Box>
-        {/* Tissues pulled out */}
-        <mesh position={[0, 1.6, 0]} rotation={[0, 0.4, 0.2]}>
-          <planeGeometry args={[0.4, 0.4]} />
-          <meshStandardMaterial color="#fff" side={THREE.DoubleSide} />
-        </mesh>
+        <InteractiveProp id="tissue_box" label="[ Take Tissue ]" position={[0, 1.45, 0]} rotation={[0, 0.4, 0]}>
+          <Box args={[0.6, 0.3, 0.6]} castShadow>
+            <meshStandardMaterial color="#e2e8f0" />
+          </Box>
+          {/* Tissues pulled out */}
+          <mesh position={[0, 0.15, 0]} rotation={[0, 0, 0.2]}>
+            <planeGeometry args={[0.4, 0.4]} />
+            <meshStandardMaterial color="#fff" side={THREE.DoubleSide} />
+          </mesh>
+        </InteractiveProp>
+        
+        {/* Holographic Clipboard to book/end session */}
+        <InteractiveProp 
+          id="session_clipboard" 
+          label={sessionBooked ? "[ End Session ]" : "[ Book Session ]"} 
+          position={[0, 1.35, 0.5]} 
+          rotation={[-0.1, 0, 0]}
+          onClick={() => {
+            const store = useVisitorStore.getState();
+            // Fade out
+            store.setIsTransitioning(true);
+            setTimeout(() => {
+              if (!store.sessionBooked) {
+                // Booking session
+                playCushionSound(useSettingsStore.getState().soundVolume);
+                store.setSitTarget([-3, 0.5, 0], [4, 0.5, 0]);
+                store.setSessionBooked(true);
+              } else {
+                // Ending session
+                playCushionSound(useSettingsStore.getState().soundVolume);
+                store.setSitTarget(null);
+                store.setSessionBooked(false);
+              }
+              // Fade in
+              setTimeout(() => store.setIsTransitioning(false), 200);
+            }, 400);
+          }}
+        >
+          <group>
+            <Box args={[0.8, 0.05, 1]} castShadow>
+              <meshStandardMaterial 
+                color={sessionBooked ? "#ef4444" : "#38bdf8"} 
+                transparent opacity={0.6} 
+                emissive={sessionBooked ? "#b91c1c" : "#0ea5e9"} 
+                emissiveIntensity={0.5} 
+              />
+            </Box>
+            {/* Glowing clip */}
+            <Cylinder args={[0.1, 0.1, 0.4]} position={[0, 0.05, -0.4]} rotation={[0, 0, Math.PI/2]}>
+              <meshStandardMaterial color="#f0f9ff" emissive="#f0f9ff" emissiveIntensity={1} />
+            </Cylinder>
+          </group>
+        </InteractiveProp>
       </group>
     </group>
   );
@@ -106,13 +169,19 @@ function GroundingStation() {
       </Cylinder>
       
       {/* Half-finished clay pot */}
-      <Cylinder args={[0.3, 0.2, 0.8]} position={[0, 3.7, 0]} castShadow>
-        <meshStandardMaterial color="#b45309" roughness={1} />
-      </Cylinder>
+      <InteractiveProp id="clay_pot" label="[ Shape Clay ]" position={[0, 3.7, 0]}>
+        <Cylinder args={[0.3, 0.2, 0.8]} castShadow>
+          <meshStandardMaterial color="#b45309" roughness={1} />
+        </Cylinder>
+      </InteractiveProp>
 
       {/* Scattered clay lumps */}
-      <RoundedBox args={[0.3, 0.2, 0.3]} radius={0.1} position={[-1.5, 3.2, 0.5]} castShadow><meshStandardMaterial color="#b45309" roughness={1} /></RoundedBox>
-      <RoundedBox args={[0.2, 0.15, 0.2]} radius={0.05} position={[-1.2, 3.15, 1]} castShadow><meshStandardMaterial color="#b45309" roughness={1} /></RoundedBox>
+      <InteractiveProp id="clay_lump_1" label="[ Inspect Clay ]" position={[-1.5, 3.2, 0.5]}>
+        <RoundedBox args={[0.3, 0.2, 0.3]} radius={0.1} castShadow><meshStandardMaterial color="#b45309" roughness={1} /></RoundedBox>
+      </InteractiveProp>
+      <InteractiveProp id="clay_lump_2" label="[ Inspect Clay ]" position={[-1.2, 3.15, 1]}>
+        <RoundedBox args={[0.2, 0.15, 0.2]} radius={0.05} castShadow><meshStandardMaterial color="#b45309" roughness={1} /></RoundedBox>
+      </InteractiveProp>
 
       {/* Stool */}
       <Cylinder args={[0.6, 0.6, 0.2]} position={[0, 1.5, 2.5]} castShadow><meshStandardMaterial color="#fcd34d" /></Cylinder>
@@ -127,6 +196,8 @@ function GroundingStation() {
 }
 
 export function TherapyRoom() {
+  const timeOfDay = useTimeStore(s => s.timeOfDay);
+  
   return (
     <group>
       {/* The Room Architecture */}
@@ -139,29 +210,38 @@ export function TherapyRoom() {
       {/* Walls */}
       {/* Back Wall */}
       <Box args={[40, 20, 1]} position={[0, 6, -20]} receiveShadow>
-        <meshStandardMaterial color="#292524" /> {/* Warm dark grey */}
+        <meshStandardMaterial color="#c8b4e2" /> {/* Soft Lilac / Lavender */}
       </Box>
       {/* Right Wall */}
       <Box args={[1, 20, 40]} position={[20, 6, 0]} receiveShadow>
-        <meshStandardMaterial color="#292524" />
+        <meshStandardMaterial color="#c8b4e2" />
       </Box>
       {/* Left Wall */}
       <Box args={[1, 20, 40]} position={[-20, 6, 0]} receiveShadow>
-        <meshStandardMaterial color="#292524" />
+        <meshStandardMaterial color="#c8b4e2" />
       </Box>
       {/* Front Wall */}
       <Box args={[40, 20, 1]} position={[0, 6, 20]} receiveShadow>
-        <meshStandardMaterial color="#292524" />
+        <meshStandardMaterial color="#c8b4e2" />
       </Box>
       {/* Ceiling */}
       <mesh rotation={[Math.PI / 2, 0, 0]} position={[0, 16, 0]} receiveShadow>
         <planeGeometry args={[40, 40]} />
-        <meshStandardMaterial color="#1c1917" />
+        <meshStandardMaterial color="#a08bc0" />
       </mesh>
 
       {/* Warm Ambient & Spot Lighting specific to this room */}
-      <ambientLight intensity={0.2} color="#fcd34d" />
-      <spotLight position={[0, 12, 0]} color="#fcd34d" intensity={2} angle={Math.PI / 3} penumbra={1} castShadow />
+      <ambientLight intensity={timeOfDay === 'Night' ? 0.05 : 0.4} color={timeOfDay === 'Night' ? "#1e1b4b" : "#fcd34d"} />
+      
+      {/* Single spotlight on the Caretaker/Table area for night */}
+      <spotLight 
+        position={[0, 12, 0]} 
+        color="#fcd34d" 
+        intensity={timeOfDay === 'Night' ? 3 : 2} 
+        angle={timeOfDay === 'Night' ? Math.PI / 6 : Math.PI / 3} 
+        penumbra={1} 
+        castShadow 
+      />
       
       <TherapyFurniture />
       <GroundingStation />

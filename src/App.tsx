@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Canvas } from '@react-three/fiber';
+import { Canvas, useThree } from '@react-three/fiber';
 import { Environment, Sky } from '@react-three/drei';
 import { EffectComposer, Bloom, Noise, Vignette } from '@react-three/postprocessing';
 import { UIOverlay } from './components/UIOverlay';
@@ -9,7 +9,26 @@ import { PresenceController } from './components/PresenceController';
 import { useTimeStore, useVisitorStore } from './lib/engine/store';
 import { SceneRouter } from './components/SceneRouter';
 import { LiveMapUI } from './components/LiveMapUI';
+import { RoomWalkthroughUI } from './components/RoomWalkthroughUI';
 import { AnimatePresence, motion } from 'framer-motion';
+import { useSettingsStore } from './lib/engine/store';
+
+// ==========================================
+// CAMERA & SETTINGS ENGINE
+// ==========================================
+function EngineSettings() {
+  const fov = useSettingsStore(s => s.fov);
+  const { camera } = useThree();
+  
+  useEffect(() => {
+    if ((camera as any).isPerspectiveCamera) {
+      (camera as any).fov = fov;
+      camera.updateProjectionMatrix();
+    }
+  }, [fov, camera]);
+  
+  return null;
+}
 
 // ==========================================
 // SCENE & SKY
@@ -77,6 +96,9 @@ export default function App() {
   // Time controls
   const timeOfDay = useTimeStore((s) => s.timeOfDay);
   const setTimeOfDay = useTimeStore((s) => s.setTimeOfDay);
+  
+  // Graphics Settings
+  const graphicsQuality = useSettingsStore(s => s.graphicsQuality);
 
   const handlePointerMissed = () => {
     setFocusedObject(null);
@@ -138,12 +160,16 @@ export default function App() {
             <LightingSystem />
             <Environment preset="apartment" environmentIntensity={timeOfDay === 'Night' ? 0.05 : timeOfDay === 'Golden Hour' ? 0.4 : 0.8} />
 
+            <EngineSettings />
+            
             {/* Cinematic Post-Processing */}
-            <EffectComposer>
-              <Bloom luminanceThreshold={0.85} luminanceSmoothing={0.9} intensity={0.1} />
-              <Noise opacity={0.02} />
-              <Vignette eskil={false} offset={0.1} darkness={0.6} />
-            </EffectComposer>
+            {graphicsQuality !== 'Low' && (
+              <EffectComposer>
+                <Bloom luminanceThreshold={0.85} luminanceSmoothing={0.9} intensity={graphicsQuality === 'Ultra' ? 0.2 : 0.1} />
+                <Noise opacity={0.02} />
+                <Vignette eskil={false} offset={0.1} darkness={0.6} />
+              </EffectComposer>
+            )}
 
             {/* Render Current Room based on State */}
             <SceneRouter />
@@ -173,11 +199,17 @@ export default function App() {
           {/* Spatial Live Map */}
           <LiveMapUI />
 
+          {/* Room Walkthrough UI */}
+          <RoomWalkthroughUI />
+
           {/* Room Transition Overlay */}
           <TransitionOverlay />
 
           {/* Environmental Controls (CTA) */}
-          <div style={{
+          <div 
+            onPointerDown={(e) => e.stopPropagation()}
+            onClick={(e) => e.stopPropagation()}
+            style={{
             position: 'absolute',
             bottom: '2rem',
             left: '50%',

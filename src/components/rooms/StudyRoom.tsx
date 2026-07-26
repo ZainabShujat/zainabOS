@@ -3,25 +3,19 @@ import { RoundedBox, Box, Text, ContactShadows, Cylinder, DragControls } from '@
 import * as THREE from 'three';
 import { useTimeStore, useVisitorStore } from '../../lib/engine/store';
 import { AnimatedDoor } from '../shared/AnimatedDoor';
+import { InteractiveProp } from '../shared/InteractiveProp';
 
 function Laptop({ position, rotation, onClick }: { position: [number, number, number], rotation: [number, number, number], onClick: () => void }) {
-  const [hovered, setHovered] = useState(false);
-  
   return (
-    <group 
+    <InteractiveProp 
+      id="laptop" 
+      label="[ Access Terminal ]" 
       position={position} 
-      rotation={rotation} 
-      scale={1.6}
-      onClick={(e) => { e.stopPropagation(); onClick(); }}
-      onPointerOver={(e) => { e.stopPropagation(); setHovered(true); document.body.style.cursor = 'pointer'; }}
-      onPointerOut={(e) => { e.stopPropagation(); setHovered(false); document.body.style.cursor = 'auto'; }}
+      rotation={rotation}
+      onClick={onClick}
+      labelOffset={[0, 2.5, 0]}
     >
-      {/* Floating prompt */}
-      {hovered && (
-        <Text position={[0, 1.5, 0]} fontSize={0.2} color="#38bdf8" outlineWidth={0.01} outlineColor="#000">
-          [ Access Terminal ]
-        </Text>
-      )}
+      <group scale={1.6}>
       {/* Laptop Cooling Pad/Stand underneath */}
       <RoundedBox args={[1.4, 0.02, 0.9]} radius={0.01} smoothness={4} position={[0, -0.02, 0]} castShadow>
         <meshStandardMaterial color="#111" />
@@ -43,7 +37,8 @@ function Laptop({ position, rotation, onClick }: { position: [number, number, nu
       <Cylinder args={[0.01, 0.01, 2]} position={[-0.5, -0.02, -1.2]} rotation={[Math.PI / 2, 0, -0.5]} castShadow>
         <meshStandardMaterial color="#222" />
       </Cylinder>
-    </group>
+      </group>
+    </InteractiveProp>
   );
 }
 
@@ -62,17 +57,21 @@ function WallShelves() {
       </RoundedBox>
       
       {/* Purple Unicorn Bookend (Block-out) */}
-      <RoundedBox args={[0.8, 1, 0.4]} radius={0.05} smoothness={4} position={[1.5, 0.5, 0]} castShadow>
-        <meshStandardMaterial color="#d8b4e2" roughness={0.9} />
-      </RoundedBox>
+      <InteractiveProp id="unicorn_bookend" label="[ Inspect Bookend ]" position={[1.5, 0.5, 0]} labelOffset={[0, 1, 0]}>
+        <RoundedBox args={[0.8, 1, 0.4]} radius={0.05} smoothness={4} castShadow>
+          <meshStandardMaterial color="#d8b4e2" roughness={0.9} />
+        </RoundedBox>
+      </InteractiveProp>
 
       {/* Airtel Xstream Router */}
-      <RoundedBox args={[1.2, 0.8, 0.2]} radius={0.05} smoothness={4} position={[3, 0.45, 0]} rotation={[-0.1, 0, 0]} castShadow>
-        <meshStandardMaterial color="#f8fafc" roughness={0.2} />
-      </RoundedBox>
-      <Cylinder args={[0.02, 0.02, 0.8]} position={[2.5, 0.8, -0.1]} rotation={[0, 0, 0.2]} castShadow><meshStandardMaterial color="#f8fafc" /></Cylinder>
-      <Cylinder args={[0.02, 0.02, 0.8]} position={[3.5, 0.8, -0.1]} rotation={[0, 0, -0.2]} castShadow><meshStandardMaterial color="#f8fafc" /></Cylinder>
-      <RoundedBox args={[0.4, 0.02, 0.02]} radius={0.01} smoothness={2} position={[2.8, 0.6, 0.1]}><meshBasicMaterial color="#4ade80" /></RoundedBox>
+      <InteractiveProp id="router" label="[ Inspect Router ]" position={[3, 0.45, 0]} rotation={[-0.1, 0, 0]} labelOffset={[0, 1, 0]}>
+        <RoundedBox args={[1.2, 0.8, 0.2]} radius={0.05} smoothness={4} castShadow>
+          <meshStandardMaterial color="#f8fafc" roughness={0.2} />
+        </RoundedBox>
+        <Cylinder args={[0.02, 0.02, 0.8]} position={[-0.5, 0.35, -0.1]} rotation={[0.1, 0, 0.2]} castShadow><meshStandardMaterial color="#f8fafc" /></Cylinder>
+        <Cylinder args={[0.02, 0.02, 0.8]} position={[0.5, 0.35, -0.1]} rotation={[0.1, 0, -0.2]} castShadow><meshStandardMaterial color="#f8fafc" /></Cylinder>
+        <RoundedBox args={[0.4, 0.02, 0.02]} radius={0.01} smoothness={2} position={[-0.2, 0.15, 0.1]}><meshBasicMaterial color="#4ade80" /></RoundedBox>
+      </InteractiveProp>
 
       <Cylinder args={[0.005, 0.005, 3]} position={[3.4, -1.5, 0]} rotation={[0, 0, -0.05]}>
         <meshStandardMaterial color="#fde047" />
@@ -82,22 +81,16 @@ function WallShelves() {
 }
 
 function OpenNotebook({ position, rotation, onClick }: { position: [number, number, number], rotation: [number, number, number], onClick: () => void }) {
-  const [hovered, setHovered] = useState(false);
-
   return (
-    <group 
+    <InteractiveProp 
+      id="notebook" 
+      label="[ Read Notes ]" 
       position={position} 
-      rotation={rotation} 
-      onClick={(e) => { e.stopPropagation(); onClick(); }}
-      onPointerOver={(e) => { e.stopPropagation(); setHovered(true); document.body.style.cursor = 'pointer'; }}
-      onPointerOut={(e) => { e.stopPropagation(); setHovered(false); document.body.style.cursor = 'auto'; }}
+      rotation={rotation}
+      onClick={onClick}
+      labelOffset={[0, 1, 0]}
     >
-      {/* Floating prompt */}
-      {hovered && (
-        <Text position={[0, 1, 0]} rotation={[0, Math.PI, 0]} fontSize={0.2} color="#fbbf24" outlineWidth={0.01} outlineColor="#000">
-          [ Read Notes ]
-        </Text>
-      )}
+      <group>
       {/* Pages */}
       <RoundedBox args={[1.2, 0.05, 1.6]} radius={0.01} smoothness={4} castShadow receiveShadow position={[0, 0.025, 0]}>
         <meshStandardMaterial color="#f8fafc" roughness={0.9} /> 
@@ -119,7 +112,8 @@ function OpenNotebook({ position, rotation, onClick }: { position: [number, numb
       <RoundedBox args={[0.15, 0.01, 1.5]} radius={0.005} smoothness={2} position={[-0.8, 0, -0.4]} rotation={[0, -0.3, 0]} castShadow>
         <meshStandardMaterial color="#cbd5e1" transparent opacity={0.4} roughness={0.1} />
       </RoundedBox>
-    </group>
+      </group>
+    </InteractiveProp>
   );
 }
 
@@ -237,31 +231,43 @@ function ScatteredObjects() {
       <DraggableLamp />
 
       {/* Water bottle far left front */}
-      <Cylinder args={[0.15, 0.15, 1.4]} position={[-5, 0.7, 1]} rotation={[0, 0.2, 0]} castShadow>
-        <meshStandardMaterial color="#1e3a8a" roughness={0.4} metalness={0.1} />
-      </Cylinder>
+      <InteractiveProp id="water_bottle" label="[ Hydrate ]" position={[-5, 0.7, 1]} rotation={[0, 0.2, 0]}>
+        <Cylinder args={[0.15, 0.15, 1.4]} castShadow>
+          <meshStandardMaterial color="#1e3a8a" roughness={0.4} metalness={0.1} />
+        </Cylinder>
+      </InteractiveProp>
       
       {/* Fuzzy coaster far right */}
-      <Cylinder args={[0.4, 0.4, 0.02]} position={[5.5, 0.01, 1]} rotation={[0, 0, 0]} castShadow receiveShadow>
-        <meshStandardMaterial color="#f8fafc" roughness={1} />
-      </Cylinder>
-      <Cylinder args={[0.1, 0.1, 0.02]} position={[5.45, 0.03, 1]} castShadow><meshStandardMaterial color="#fef08a" /></Cylinder>
+      <InteractiveProp id="fuzzy_coaster" label="[ Inspect Coaster ]" position={[5.5, 0.01, 1]}>
+        <Cylinder args={[0.4, 0.4, 0.02]} castShadow receiveShadow>
+          <meshStandardMaterial color="#f8fafc" roughness={1} />
+        </Cylinder>
+        <Cylinder args={[0.1, 0.1, 0.02]} position={[-0.05, 0.02, 0]} castShadow><meshStandardMaterial color="#fef08a" /></Cylinder>
+      </InteractiveProp>
 
-      <RoundedBox args={[0.15, 0.2, 0.15]} radius={0.05} smoothness={4} position={[6.2, 0.1, 0.6]} rotation={[0, 0.4, 0]} castShadow><meshStandardMaterial color="#064e3b" /></RoundedBox>
-      <RoundedBox args={[0.15, 0.3, 0.15]} radius={0.05} smoothness={4} position={[5.9, 0.15, 0.5]} rotation={[0, -0.2, 0]} castShadow><meshStandardMaterial color="#312e81" /></RoundedBox>
+      <InteractiveProp id="tea_mug" label="[ Drink Tea ]" position={[6.2, 0.1, 0.6]} rotation={[0, 0.4, 0]}>
+        <RoundedBox args={[0.15, 0.2, 0.15]} radius={0.05} smoothness={4} castShadow><meshStandardMaterial color="#064e3b" /></RoundedBox>
+      </InteractiveProp>
+      <InteractiveProp id="coffee_mug" label="[ Drink Coffee ]" position={[5.9, 0.15, 0.5]} rotation={[0, -0.2, 0]}>
+        <RoundedBox args={[0.15, 0.3, 0.15]} radius={0.05} smoothness={4} castShadow><meshStandardMaterial color="#312e81" /></RoundedBox>
+      </InteractiveProp>
 
       {/* Journal and Remote center right */}
-      <RoundedBox args={[1, 0.08, 1.4]} radius={0.02} smoothness={4} position={[1, 0.04, 2.5]} rotation={[0, 0.15, 0]} castShadow receiveShadow>
-        <meshStandardMaterial color="#e5e5e5" roughness={0.8} />
-      </RoundedBox>
-      <RoundedBox args={[0.2, 0.05, 0.6]} radius={0.02} smoothness={4} position={[0.9, 0.1, 2.6]} rotation={[0, -0.4, 0]} castShadow>
-        <meshStandardMaterial color="#f1f5f9" />
-      </RoundedBox>
+      <InteractiveProp id="journal_remote" label="[ Inspect Journal ]" position={[1, 0.04, 2.5]} rotation={[0, 0.15, 0]}>
+        <RoundedBox args={[1, 0.08, 1.4]} radius={0.02} smoothness={4} castShadow receiveShadow>
+          <meshStandardMaterial color="#e5e5e5" roughness={0.8} />
+        </RoundedBox>
+        <RoundedBox args={[0.2, 0.05, 0.6]} radius={0.02} smoothness={4} position={[-0.1, 0.06, 0.1]} rotation={[0, -0.55, 0]} castShadow>
+          <meshStandardMaterial color="#f1f5f9" />
+        </RoundedBox>
+      </InteractiveProp>
 
       {/* GEM box center left */}
-      <RoundedBox args={[0.3, 0.1, 0.4]} radius={0.02} smoothness={4} position={[-1, 0.05, 1.5]} rotation={[0, -0.1, 0]} castShadow>
-        <meshStandardMaterial color="#a3e635" transparent opacity={0.6} />
-      </RoundedBox>
+      <InteractiveProp id="gem_box" label="[ Inspect GEM Box ]" position={[-1, 0.05, 1.5]} rotation={[0, -0.1, 0]}>
+        <RoundedBox args={[0.3, 0.1, 0.4]} radius={0.02} smoothness={4} castShadow>
+          <meshStandardMaterial color="#a3e635" transparent opacity={0.6} />
+        </RoundedBox>
+      </InteractiveProp>
 
       {/* Stray Cable snaking across the back of the desk */}
       <Cylinder args={[0.01, 0.01, 10]} position={[0, 0.01, -1.6]} rotation={[Math.PI / 2, 0.05, 1.5]} castShadow>
@@ -312,7 +318,16 @@ function RoomFurniture() {
       </group>
 
       {/* The Bed (Bottom Left) */}
-      <group position={[-6, -3.5, 14]} rotation={[0, 0, 0]}>
+      <group 
+        position={[-6, -3.5, 14]} 
+        rotation={[0, 0, 0]}
+        onClick={(e) => { e.stopPropagation(); setSitTarget([-4, -1, 14], [-4, 2, 0]); }}
+        onPointerOver={(e) => { e.stopPropagation(); document.body.style.cursor = 'pointer'; }}
+        onPointerOut={(e) => { e.stopPropagation(); document.body.style.cursor = 'auto'; }}
+      >
+        <Text position={[0, 3, 0]} fontSize={0.2} color="#fbbf24" outlineWidth={0.01} outlineColor="#000">
+          [ Rest ]
+        </Text>
         {/* Frame */}
         <RoundedBox args={[7, 1, 10]} radius={0.1} smoothness={4} castShadow receiveShadow>
           <meshStandardMaterial color="#3f1d13" roughness={0.9} />
@@ -392,26 +407,26 @@ function RoomFurniture() {
         </Box>
         
         {/* Pinned Note 1 */}
-        <group position={[-3, 0.5, 0.15]} rotation={[0, 0, 0.1]}>
+        <InteractiveProp id="pinned_goals" label="[ Read Goals ]" position={[-3, 0.5, 0.15]} rotation={[0, 0, 0.1]}>
           <Box args={[2, 2, 0.05]}><meshStandardMaterial color="#fef08a" /></Box>
           <Cylinder args={[0.05, 0.05, 0.1]} position={[0, 0.8, 0.05]} rotation={[Math.PI/2, 0, 0]}><meshStandardMaterial color="#ef4444" /></Cylinder>
           <Text position={[-0.8, 0.6, 0.05]} fontSize={0.2} color="#111" anchorX="left" maxWidth={1.8}>
             {`GOALS\n- Living Architecture\n- Knowledge Graph`}
           </Text>
-        </group>
+        </InteractiveProp>
 
         {/* Pinned Note 2 */}
-        <group position={[1, -0.5, 0.15]} rotation={[0, 0, -0.05]}>
+        <InteractiveProp id="pinned_blueprint" label="[ Inspect Blueprint ]" position={[1, -0.5, 0.15]} rotation={[0, 0, -0.05]}>
           <Box args={[1.5, 1.5, 0.05]}><meshStandardMaterial color="#bae6fd" /></Box>
           <Cylinder args={[0.05, 0.05, 0.1]} position={[0, 0.6, 0.05]} rotation={[Math.PI/2, 0, 0]}><meshStandardMaterial color="#3b82f6" /></Cylinder>
-        </group>
+        </InteractiveProp>
 
         {/* Photo/Postcard */}
-        <group position={[3.5, 0.8, 0.15]} rotation={[0, 0, 0.15]}>
+        <InteractiveProp id="postcard" label="[ View Memory ]" position={[3.5, 0.8, 0.15]} rotation={[0, 0, 0.15]}>
           <Box args={[2, 1.5, 0.05]}><meshStandardMaterial color="#f8fafc" /></Box>
           <Box args={[1.8, 1.1, 0.06]} position={[0, 0.1, 0]}><meshStandardMaterial color="#94a3b8" /></Box>
           <Cylinder args={[0.05, 0.05, 0.1]} position={[0, 0.6, 0.05]} rotation={[Math.PI/2, 0, 0]}><meshStandardMaterial color="#10b981" /></Cylinder>
-        </group>
+        </InteractiveProp>
       </group>
     </group>
   );
@@ -425,32 +440,29 @@ function EnclosedArchitecture() {
       {/* Floor */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -4, 8]} receiveShadow>
         <planeGeometry args={[30, 30]} />
-        <meshStandardMaterial color="#f1f5f9" roughness={0.5} />
+        <meshStandardMaterial color="#2d2a26" roughness={0.7} />
       </mesh>
       
       {/* Roof */}
       <mesh rotation={[Math.PI / 2, 0, 0]} position={[0, 10, 8]} receiveShadow>
         <planeGeometry args={[30, 30]} />
-        <meshStandardMaterial color="#1e293b" />
+        <meshStandardMaterial color="#1f2421" />
       </mesh>
 
-      {/* Back Wall (Vertical Pine Wood Panels) */}
-      <mesh position={[0, 3, -4]} receiveShadow>
-        <planeGeometry args={[30, 20]} />
-        <meshStandardMaterial color="#d97736" roughness={0.9} />
-      </mesh>
+      {/* Back Wall */}
+      <Box args={[30, 20, 1]} position={[0, 3, -4.5]} receiveShadow>
+        <meshStandardMaterial color="#4a5d4e" roughness={0.9} /> {/* Deep Sage Green */}
+      </Box>
       
       {/* Right Wall */}
-      <mesh rotation={[0, -Math.PI / 2, 0]} position={[12, 3, 8]} receiveShadow>
-        <planeGeometry args={[30, 20]} />
-        <meshStandardMaterial color="#1e293b" />
-      </mesh>
+      <Box args={[1, 20, 30]} position={[12.5, 3, 8]} receiveShadow>
+        <meshStandardMaterial color="#4a5d4e" />
+      </Box>
       
       {/* Wall behind the camera (Front Wall) */}
-      <mesh rotation={[0, Math.PI, 0]} position={[0, 3, 23]} receiveShadow>
-        <planeGeometry args={[30, 20]} />
-        <meshStandardMaterial color="#1e293b" />
-      </mesh>
+      <Box args={[30, 20, 1]} position={[0, 3, 23.5]} receiveShadow>
+        <meshStandardMaterial color="#4a5d4e" />
+      </Box>
 
       {/* Left Wall (The Window Wall) */}
       <group position={[-12, 3, 8]}>
@@ -459,9 +471,15 @@ function EnclosedArchitecture() {
         <Box args={[1, 10, 10]} position={[0, 1, 10]} receiveShadow><meshStandardMaterial color="#1e293b" /></Box>
         <Box args={[1, 10, 10]} position={[0, 1, -10]} receiveShadow><meshStandardMaterial color="#1e293b" /></Box>
         
+        {/* Solid Glass Pane to prevent walking through */}
+        <Box args={[0.5, 7, 20]} position={[0, 1, 0]} receiveShadow>
+          <meshPhysicalMaterial color="#ffffff" transmission={0.9} opacity={1} transparent roughness={0.1} thickness={2} />
+        </Box>
+
         {/* The Window Frame (Mullions) */}
-        <Box args={[0.2, 10, 0.2]} position={[0, 1, 0]} castShadow><meshStandardMaterial color="#0f172a" /></Box>
-        <Box args={[0.2, 0.2, 10]} position={[0, 1, 0]} castShadow><meshStandardMaterial color="#0f172a" /></Box>
+        <Box args={[0.2, 7, 0.2]} position={[0, 1, 0]} castShadow><meshStandardMaterial color="#0f172a" /></Box>
+        <Box args={[0.2, 0.2, 20]} position={[0, 1, 0]} castShadow><meshStandardMaterial color="#0f172a" /></Box>
+        
       </group>
 
       <AnimatedDoor 
@@ -470,6 +488,16 @@ function EnclosedArchitecture() {
         targetRoom="Hallway" 
         label="[ Open Door to Hallway ]" 
       />
+
+      {/* Warm Amber Sconces (Night) */}
+      <group position={[-5, 2, -3.9]}>
+        <Box args={[0.2, 0.4, 0.1]} castShadow><meshStandardMaterial color="#111" /></Box>
+        <pointLight color="#fbbf24" intensity={useTimeStore.getState().timeOfDay === 'Night' ? 2 : 0} distance={10} castShadow />
+      </group>
+      <group position={[5, 2, -3.9]}>
+        <Box args={[0.2, 0.4, 0.1]} castShadow><meshStandardMaterial color="#111" /></Box>
+        <pointLight color="#fbbf24" intensity={useTimeStore.getState().timeOfDay === 'Night' ? 2 : 0} distance={10} castShadow />
+      </group>
     </group>
   );
 }

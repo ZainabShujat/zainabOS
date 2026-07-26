@@ -2,20 +2,24 @@ import { useState, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Box, Cylinder, Text } from '@react-three/drei';
 import * as THREE from 'three';
-import { useVisitorStore, Room } from '../../lib/engine/store';
+import { useVisitorStore, Room, useTimeStore } from '../../lib/engine/store';
 
 interface AnimatedDoorProps {
   position: [number, number, number];
   rotation?: [number, number, number];
   targetRoom: Room;
   label: string;
+  glowColor?: string;
 }
 
-export function AnimatedDoor({ position, rotation = [0, 0, 0], targetRoom, label }: AnimatedDoorProps) {
+export function AnimatedDoor({ position, rotation = [0, 0, 0], targetRoom, label, glowColor }: AnimatedDoorProps) {
   const [isOpen, setIsOpen] = useState(false);
   const setIsTransitioning = useVisitorStore((s) => s.setIsTransitioning);
   const setRoom = useVisitorStore((s) => s.setRoom);
+  const timeOfDay = useTimeStore((s) => s.timeOfDay);
   const doorRef = useRef<THREE.Group>(null);
+  
+  const isNight = timeOfDay === 'Night' || timeOfDay === 'Golden Hour';
 
   const handleDoorClick = () => {
     if (isOpen) return;
@@ -47,7 +51,11 @@ export function AnimatedDoor({ position, rotation = [0, 0, 0], targetRoom, label
       
       {/* Door Frame (Stationary) */}
       <Box args={[4.2, 9.2, 0.4]} position={[0, 4.5, 0]}>
-        <meshStandardMaterial color="#1f150e" />
+        <meshStandardMaterial 
+          color="#1f150e" 
+          emissive={isNight && glowColor ? glowColor : "#000"} 
+          emissiveIntensity={isNight && glowColor ? 0.8 : 0} 
+        />
       </Box>
 
       {/* The Door Hinge Group */}

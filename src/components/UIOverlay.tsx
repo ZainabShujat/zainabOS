@@ -16,6 +16,12 @@ export function UIOverlay({ focusedObject, onClose }: UIOverlayProps) {
   const setMouseSensitivity = useSettingsStore(s => s.setMouseSensitivity);
   const moveSpeed = useSettingsStore(s => s.moveSpeed);
   const setMoveSpeed = useSettingsStore(s => s.setMoveSpeed);
+  const graphicsQuality = useSettingsStore(s => s.graphicsQuality);
+  const setGraphicsQuality = useSettingsStore(s => s.setGraphicsQuality);
+  const fov = useSettingsStore(s => s.fov);
+  const setFov = useSettingsStore(s => s.setFov);
+  const soundVolume = useSettingsStore(s => s.soundVolume);
+  const setSoundVolume = useSettingsStore(s => s.setSoundVolume);
 
   useEffect(() => {
     // Fetch the compiled graph data from the public folder
@@ -105,7 +111,10 @@ export function UIOverlay({ focusedObject, onClose }: UIOverlayProps) {
 
     {/* Settings Modal */}
     {showSettings && (
-      <div style={{
+      <div 
+        onPointerDown={(e) => e.stopPropagation()}
+        onClick={(e) => e.stopPropagation()}
+        style={{
         position: 'absolute', bottom: '5rem', left: '1rem',
         background: 'rgba(17, 17, 17, 0.8)', backdropFilter: 'blur(10px)',
         padding: '1rem', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.2)',
@@ -126,6 +135,43 @@ export function UIOverlay({ focusedObject, onClose }: UIOverlayProps) {
           </div>
           <input type="range" min="5" max="30" step="1" value={moveSpeed} onChange={e => setMoveSpeed(parseFloat(e.target.value))} style={{ width: '100%' }} />
         </div>
+        <div style={{ marginTop: '1rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.25rem' }}>
+            <label style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.7)' }}>Sound Volume</label>
+            <span style={{ fontSize: '0.75rem' }}>{Math.round(soundVolume * 100)}%</span>
+          </div>
+          <input type="range" min="0" max="1" step="0.05" value={soundVolume} onChange={e => setSoundVolume(parseFloat(e.target.value))} style={{ width: '100%' }} />
+        </div>
+        <div style={{ marginTop: '1rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.25rem' }}>
+            <label style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.7)' }}>Field of View (FOV)</label>
+            <span style={{ fontSize: '0.75rem' }}>{fov}°</span>
+          </div>
+          <input type="range" min="30" max="90" step="5" value={fov} onChange={e => setFov(parseFloat(e.target.value))} style={{ width: '100%' }} />
+        </div>
+        <div style={{ marginTop: '1rem' }}>
+          <label style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.7)', display: 'block', marginBottom: '0.5rem' }}>Graphics Quality</label>
+          <div style={{ display: 'flex', gap: '0.5rem' }}>
+            {['Low', 'Medium', 'High', 'Ultra'].map(q => (
+              <button 
+                key={q} 
+                onClick={() => setGraphicsQuality(q as any)}
+                style={{ 
+                  flex: 1, 
+                  padding: '0.25rem', 
+                  fontSize: '0.65rem',
+                  background: graphicsQuality === q ? 'rgba(56, 189, 248, 0.2)' : 'rgba(255,255,255,0.1)',
+                  color: graphicsQuality === q ? '#38bdf8' : 'white',
+                  border: `1px solid ${graphicsQuality === q ? '#38bdf8' : 'transparent'}`,
+                  borderRadius: '4px',
+                  cursor: 'pointer'
+                }}
+              >
+                {q}
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
     )}
 
@@ -143,7 +189,11 @@ export function UIOverlay({ focusedObject, onClose }: UIOverlayProps) {
 
     {/* Settings Button */}
     <button 
-      onClick={() => setShowSettings(!showSettings)} 
+      onPointerDown={(e) => e.stopPropagation()}
+      onClick={(e) => {
+        e.stopPropagation();
+        setShowSettings(!showSettings);
+      }} 
       style={{
         position: 'absolute', bottom: '1rem', left: '1rem', padding: '0.75rem',
         background: 'rgba(17, 17, 17, 0.5)', border: '1px solid rgba(255,255,255,0.2)',

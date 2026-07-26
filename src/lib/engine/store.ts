@@ -61,6 +61,7 @@ interface VisitorState {
   curiosityTrail: string[]; // History of interacted entities
   sitTarget: [number, number, number] | null;
   sitLookAt: [number, number, number] | null;
+  sessionBooked: boolean;
   
   setRoom: (room: Room) => void;
   setIsTransitioning: (val: boolean) => void;
@@ -68,6 +69,7 @@ interface VisitorState {
   focusObject: (id: string | null) => void;
   addToTrail: (entityId: string) => void;
   setSitTarget: (target: [number, number, number] | null, lookAt?: [number, number, number]) => void;
+  setSessionBooked: (val: boolean) => void;
 }
 
 export const useVisitorStore = create<VisitorState>((set) => ({
@@ -79,12 +81,14 @@ export const useVisitorStore = create<VisitorState>((set) => ({
   curiosityTrail: [],
   sitTarget: null,
   sitLookAt: null,
+  sessionBooked: false,
   
   setRoom: (room) => set((state) => ({ previousRoom: state.currentRoom, currentRoom: room })),
   setIsTransitioning: (val) => set({ isTransitioning: val }),
   setShowMap: (val) => set({ showMap: val }),
   focusObject: (id) => set({ focusedObjectId: id }),
   setSitTarget: (target, lookAt) => set({ sitTarget: target, sitLookAt: lookAt || null }),
+  setSessionBooked: (val) => set({ sessionBooked: val }),
   addToTrail: (entityId) => set((state) => {
     // Only add if it's not the most recent one to prevent duplicates
     if (state.curiosityTrail[state.curiosityTrail.length - 1] !== entityId) {
@@ -102,6 +106,12 @@ interface SettingsStore {
   setMouseSensitivity: (val: number) => void;
   moveSpeed: number;
   setMoveSpeed: (val: number) => void;
+  soundVolume: number;
+  setSoundVolume: (val: number) => void;
+  graphicsQuality: 'Low' | 'Medium' | 'High' | 'Ultra';
+  setGraphicsQuality: (val: 'Low' | 'Medium' | 'High' | 'Ultra') => void;
+  fov: number;
+  setFov: (val: number) => void;
 }
 
 export const useSettingsStore = create<SettingsStore>((set) => ({
@@ -109,4 +119,10 @@ export const useSettingsStore = create<SettingsStore>((set) => ({
   setMouseSensitivity: (val) => set({ mouseSensitivity: val }),
   moveSpeed: 10,
   setMoveSpeed: (val) => set({ moveSpeed: val }),
+  soundVolume: 0.5,
+  setSoundVolume: (val) => set({ soundVolume: val }),
+  graphicsQuality: 'High',
+  setGraphicsQuality: (val) => set({ graphicsQuality: val }),
+  fov: 45,
+  setFov: (val) => set({ fov: val }),
 }));
