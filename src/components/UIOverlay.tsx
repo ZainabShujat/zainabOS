@@ -20,6 +20,8 @@ export function UIOverlay({ focusedObject, onClose }: UIOverlayProps) {
   const setGraphicsQuality = useSettingsStore(s => s.setGraphicsQuality);
   const fov = useSettingsStore(s => s.fov);
   const setFov = useSettingsStore(s => s.setFov);
+  const viewMode = useSettingsStore(s => s.viewMode);
+  const setViewMode = useSettingsStore(s => s.setViewMode);
   const soundVolume = useSettingsStore(s => s.soundVolume);
   const setSoundVolume = useSettingsStore(s => s.setSoundVolume);
 
@@ -168,6 +170,30 @@ export function UIOverlay({ focusedObject, onClose }: UIOverlayProps) {
                 }}
               >
                 {q}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div style={{ marginTop: '1rem' }}>
+          <label style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.7)', display: 'block', marginBottom: '0.5rem' }}>View Mode</label>
+          <div style={{ display: 'flex', gap: '0.5rem' }}>
+            {['immersive', 'explorer'].map(m => (
+              <button 
+                key={m} 
+                onClick={() => setViewMode(m as any)}
+                style={{ 
+                  flex: 1, 
+                  padding: '0.25rem', 
+                  fontSize: '0.65rem',
+                  textTransform: 'capitalize',
+                  background: viewMode === m ? 'rgba(56, 189, 248, 0.2)' : 'rgba(255,255,255,0.1)',
+                  color: viewMode === m ? '#38bdf8' : 'white',
+                  border: `1px solid ${viewMode === m ? '#38bdf8' : 'transparent'}`,
+                  borderRadius: '4px',
+                  cursor: 'pointer'
+                }}
+              >
+                {m}
               </button>
             ))}
           </div>

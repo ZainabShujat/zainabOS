@@ -1,9 +1,11 @@
-
 import { Box, Text } from '@react-three/drei';
 import { AnimatedDoor } from '../shared/AnimatedDoor';
+import { LightSwitch } from '../shared/LightSwitch';
+import { useTimeStore, useSettingsStore } from '../../lib/engine/store';
 
 export function HallwayRoom() {
-
+  const timeOfDay = useTimeStore((state) => state.timeOfDay);
+  const isLightOn = useSettingsStore((state) => state.roomLights['Hallway']);
 
   return (
     <group>
@@ -84,6 +86,21 @@ export function HallwayRoom() {
         label="[ Math Corner ]" 
         glowColor="#facc15" // Yellow math chalk glow
       />
+
+      {/* The Light Switch near the main entrance */}
+      <LightSwitch position={[0.5, -1, -45]} rotation={[0, 0, 0]} roomName="Hallway" />
+
+      {/* Lighting */}
+      <ambientLight intensity={isLightOn ? (timeOfDay === 'Night' ? 0.05 : 0.4) : 0.01} color={timeOfDay === 'Night' ? "#1e1b4b" : "#ffffff"} />
+      
+      {isLightOn && (
+        <group>
+          {/* Main Hallway Chandelier / Overhead */}
+          <spotLight position={[0, 9, 0]} intensity={timeOfDay === 'Night' ? 2 : 1.5} angle={Math.PI / 3} penumbra={0.8} castShadow />
+          <spotLight position={[0, 9, -15]} intensity={timeOfDay === 'Night' ? 2 : 1.5} angle={Math.PI / 3} penumbra={0.8} castShadow />
+          <spotLight position={[0, 9, -30]} intensity={timeOfDay === 'Night' ? 2 : 1.5} angle={Math.PI / 3} penumbra={0.8} castShadow />
+        </group>
+      )}
 
       <Text position={[0, 2, -40]} rotation={[0, Math.PI, 0]} fontSize={0.8} color="#94a3b8">
         The Hallway

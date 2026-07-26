@@ -56,8 +56,8 @@ export function playFootstep(volume: number = 0.5) {
   osc.frequency.setValueAtTime(150, t);
   osc.frequency.exponentialRampToValueAtTime(40, t + 0.1);
 
-  // Apply volume setting, keeping it subtle
-  const maxGain = 0.2 * volume;
+  // Apply volume setting. Increased base multiplier so footsteps are audible.
+  const maxGain = 0.5 * volume;
   
   gain.gain.setValueAtTime(0, t);
   gain.gain.linearRampToValueAtTime(maxGain, t + 0.02);

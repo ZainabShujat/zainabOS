@@ -112,6 +112,10 @@ interface SettingsStore {
   setGraphicsQuality: (val: 'Low' | 'Medium' | 'High' | 'Ultra') => void;
   fov: number;
   setFov: (val: number) => void;
+  viewMode: 'immersive' | 'explorer';
+  setViewMode: (val: 'immersive' | 'explorer') => void;
+  roomLights: Record<string, boolean>;
+  toggleRoomLight: (room: string) => void;
 }
 
 export const useSettingsStore = create<SettingsStore>((set) => ({
@@ -125,4 +129,10 @@ export const useSettingsStore = create<SettingsStore>((set) => ({
   setGraphicsQuality: (val) => set({ graphicsQuality: val }),
   fov: 45,
   setFov: (val) => set({ fov: val }),
+  viewMode: 'immersive',
+  setViewMode: (val) => set({ viewMode: val }),
+  roomLights: { Study: true, Hallway: true, TherapyRoom: true, ChroniclesLibrary: true, FreelanceStudio: true, AILab: true },
+  toggleRoomLight: (room) => set((state) => ({ 
+    roomLights: { ...state.roomLights, [room]: !state.roomLights[room] } 
+  })),
 }));

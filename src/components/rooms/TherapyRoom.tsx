@@ -3,6 +3,7 @@ import { AnimatedDoor } from '../shared/AnimatedDoor';
 import * as THREE from 'three';
 import { useTimeStore, useSettingsStore, useVisitorStore } from '../../lib/engine/store';
 import { InteractiveProp } from '../shared/InteractiveProp';
+import { LightSwitch } from '../shared/LightSwitch';
 import { Caretaker } from '../shared/Caretaker';
 import { playCushionSound } from '../../lib/audio';
 
@@ -197,6 +198,8 @@ function GroundingStation() {
 
 export function TherapyRoom() {
   const timeOfDay = useTimeStore(s => s.timeOfDay);
+  const roomLights = useSettingsStore(s => s.roomLights);
+  const isLightOn = roomLights['TherapyRoom'];
   
   return (
     <group>
@@ -230,18 +233,23 @@ export function TherapyRoom() {
         <meshStandardMaterial color="#a08bc0" />
       </mesh>
 
+      {/* The Light Switch near the door */}
+      <LightSwitch position={[0.5, -1, 3.9]} rotation={[0, Math.PI, 0]} roomName="TherapyRoom" />
+
       {/* Warm Ambient & Spot Lighting specific to this room */}
-      <ambientLight intensity={timeOfDay === 'Night' ? 0.05 : 0.4} color={timeOfDay === 'Night' ? "#1e1b4b" : "#fcd34d"} />
+      <ambientLight intensity={isLightOn ? (timeOfDay === 'Night' ? 0.05 : 0.4) : 0.01} color={timeOfDay === 'Night' ? "#1e1b4b" : "#fcd34d"} />
       
       {/* Single spotlight on the Caretaker/Table area for night */}
-      <spotLight 
-        position={[0, 12, 0]} 
-        color="#fcd34d" 
-        intensity={timeOfDay === 'Night' ? 3 : 2} 
-        angle={timeOfDay === 'Night' ? Math.PI / 6 : Math.PI / 3} 
-        penumbra={1} 
-        castShadow 
-      />
+      {isLightOn && (
+        <spotLight 
+          position={[0, 12, 0]} 
+          color="#fcd34d" 
+          intensity={timeOfDay === 'Night' ? 3 : 2} 
+          angle={timeOfDay === 'Night' ? Math.PI / 6 : Math.PI / 3} 
+          penumbra={1} 
+          castShadow 
+        />
+      )}
       
       <TherapyFurniture />
       <GroundingStation />

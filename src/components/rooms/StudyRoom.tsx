@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
 import { RoundedBox, Box, Text, ContactShadows, Cylinder, DragControls } from '@react-three/drei';
 import * as THREE from 'three';
-import { useTimeStore, useVisitorStore } from '../../lib/engine/store';
+import { useTimeStore, useVisitorStore, useSettingsStore } from '../../lib/engine/store';
 import { AnimatedDoor } from '../shared/AnimatedDoor';
 import { InteractiveProp } from '../shared/InteractiveProp';
+import { LightSwitch } from '../shared/LightSwitch';
+import { AnimatedWindow } from '../shared/AnimatedWindow';
 
 function Laptop({ position, rotation, onClick }: { position: [number, number, number], rotation: [number, number, number], onClick: () => void }) {
   return (
@@ -471,15 +473,8 @@ function EnclosedArchitecture() {
         <Box args={[1, 10, 10]} position={[0, 1, 10]} receiveShadow><meshStandardMaterial color="#1e293b" /></Box>
         <Box args={[1, 10, 10]} position={[0, 1, -10]} receiveShadow><meshStandardMaterial color="#1e293b" /></Box>
         
-        {/* Solid Glass Pane to prevent walking through */}
-        <Box args={[0.5, 7, 20]} position={[0, 1, 0]} receiveShadow>
-          <meshPhysicalMaterial color="#ffffff" transmission={0.9} opacity={1} transparent roughness={0.1} thickness={2} />
-        </Box>
-
-        {/* The Window Frame (Mullions) */}
-        <Box args={[0.2, 7, 0.2]} position={[0, 1, 0]} castShadow><meshStandardMaterial color="#0f172a" /></Box>
-        <Box args={[0.2, 0.2, 20]} position={[0, 1, 0]} castShadow><meshStandardMaterial color="#0f172a" /></Box>
-        
+        {/* The Animated Window perfectly aligned with the cavity */}
+        <AnimatedWindow position={[0, 0.5, 0]} rotation={[0, Math.PI / 2, 0]} width={10} height={7} />
       </group>
 
       <AnimatedDoor 
@@ -504,9 +499,23 @@ function EnclosedArchitecture() {
 
 export function StudyRoom() {
   const setFocusedObject = useVisitorStore(s => s.focusObject);
+  const roomLights = useSettingsStore(s => s.roomLights);
+  const isLightOn = roomLights['Study'];
 
   return (
     <>
+      <ambientLight intensity={isLightOn ? 0.3 : 0.05} />
+      {isLightOn && (
+        <spotLight 
+          position={[0, 9, 0]} 
+          intensity={2} 
+          angle={Math.PI / 3} 
+          penumbra={1} 
+          castShadow 
+          shadow-mapSize={[2048, 2048]} 
+        />
+      )}
+      
       {/* The Desk Surface */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[-4.5, 0, 0]} receiveShadow>
         <planeGeometry args={[15, 8]} />
@@ -541,6 +550,9 @@ export function StudyRoom() {
 
       {/* Architecture */}
       <WallShelves />
+
+      {/* The Light Switch near the door */}
+      <LightSwitch position={[0.5, -1, 3.9]} rotation={[0, Math.PI, 0]} roomName="Study" />
 
       {/* Lived-in Objects */}
       <Laptop 

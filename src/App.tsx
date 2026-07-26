@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { Canvas, useThree } from '@react-three/fiber';
-import { Environment, Sky } from '@react-three/drei';
+import { Environment, Stars } from '@react-three/drei';
 import { EffectComposer, Bloom, Noise, Vignette } from '@react-three/postprocessing';
 import { UIOverlay } from './components/UIOverlay';
 import { SplashScreen } from './components/SplashScreen';
@@ -10,6 +10,7 @@ import { useTimeStore, useVisitorStore } from './lib/engine/store';
 import { SceneRouter } from './components/SceneRouter';
 import { LiveMapUI } from './components/LiveMapUI';
 import { RoomWalkthroughUI } from './components/RoomWalkthroughUI';
+import { TherapyChatUI } from './components/TherapyChatUI';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useSettingsStore } from './lib/engine/store';
 
@@ -29,22 +30,42 @@ function EngineSettings() {
   
   return null;
 }
-
 // ==========================================
-// SCENE & SKY
+// SCENE & GALAXY
 // ==========================================
 
-function DynamicSky() {
+function DynamicGalaxy() {
   const timeOfDay = useTimeStore((s) => s.timeOfDay);
   
-  // Match the sun positions from LightingSystem.tsx
-  const sunPosition: [number, number, number] = 
-    timeOfDay === 'Morning' ? [-25, 5, 2] :
-    timeOfDay === 'Afternoon' ? [-15, 15, 5] :
-    timeOfDay === 'Golden Hour' ? [-30, 2, 5] :
-    [-15, -10, -5]; // Night (sun below horizon)
+  // A localized rogue star that orbits the mansion
+  const starPosition: [number, number, number] = 
+    timeOfDay === 'Morning' ? [-25, 15, 20] :
+    timeOfDay === 'Afternoon' ? [0, 40, 5] :
+    timeOfDay === 'Golden Hour' ? [30, 10, -10] :
+    [0, -50, 0]; // Night (sun below horizon)
   
-  return <Sky distance={450000} sunPosition={sunPosition} mieCoefficient={timeOfDay === 'Night' ? 0.05 : 0.005} rayleigh={timeOfDay === 'Night' ? 0.1 : 2} />;
+  return (
+    <group>
+      <Stars radius={100} depth={50} count={5000} factor={4} saturation={0} fade speed={1} />
+      {timeOfDay !== 'Night' && (
+        <group>
+          {/* The Physical Glowing Star */}
+          <mesh position={starPosition}>
+            <sphereGeometry args={[2, 32, 32]} />
+            <meshBasicMaterial color={timeOfDay === 'Golden Hour' ? '#fbbf24' : '#ffffff'} />
+          </mesh>
+          
+          <directionalLight 
+            position={starPosition} 
+            intensity={timeOfDay === 'Golden Hour' ? 1.5 : 2} 
+            color={timeOfDay === 'Golden Hour' ? '#fbbf24' : '#fff'}
+            castShadow 
+            shadow-mapSize={[2048, 2048]}
+          />
+        </group>
+      )}
+    </group>
+  );
 }
 
 // ==========================================
@@ -155,8 +176,8 @@ export default function App() {
         <>
           <Canvas shadows camera={{ position: [0, 1.5, 10], fov: 45 }} onPointerMissed={handlePointerMissed}>
             
-            <color attach="background" args={['#d1d5db']} />
-            <DynamicSky />
+            <color attach="background" args={['#03030a']} />
+            <DynamicGalaxy />
             <LightingSystem />
             <Environment preset="apartment" environmentIntensity={timeOfDay === 'Night' ? 0.05 : timeOfDay === 'Golden Hour' ? 0.4 : 0.8} />
 
@@ -201,6 +222,9 @@ export default function App() {
 
           {/* Room Walkthrough UI */}
           <RoomWalkthroughUI />
+
+          {/* Therapy Session Chat UI */}
+          <TherapyChatUI />
 
           {/* Room Transition Overlay */}
           <TransitionOverlay />

@@ -66,6 +66,9 @@ export function AnimatedDoor({ position, rotation = [0, 0, 0], targetRoom, label
         onPointerOver={(e) => { e.stopPropagation(); document.body.style.cursor = isOpen ? 'auto' : 'pointer'; }}
         onPointerOut={(e) => { e.stopPropagation(); document.body.style.cursor = 'auto'; }}
       >
+        {/* Door Radiance (Glow onto the wall) */}
+        {isNight && glowColor && <pointLight position={[0, 4, 1]} distance={15} intensity={2} color={glowColor} />}
+        
         {/* The Door itself, offset negatively so its edge aligns with the hinge */}
         <Box args={[3.8, 8.8, 0.2]} position={[-1.9, 4.5, 0.1]}>
           <meshStandardMaterial color="#3f1d13" />

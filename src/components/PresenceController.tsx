@@ -1,6 +1,6 @@
 import { useEffect, useRef, forwardRef, useImperativeHandle } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
-import { PointerLockControls } from '@react-three/drei';
+import { PointerLockControls, OrbitControls } from '@react-three/drei';
 import * as THREE from 'three';
 import { useSettingsStore, useVisitorStore } from '../lib/engine/store';
 import { playFootstep } from '../lib/audio';
@@ -21,6 +21,7 @@ export const PresenceController = forwardRef((_, ref) => {
   const moveSpeed = useSettingsStore(s => s.moveSpeed) * 0.5; // Tone down speed for walking
   const soundVolume = useSettingsStore(s => s.soundVolume);
   const mouseSensitivity = useSettingsStore(s => s.mouseSensitivity);
+  const viewMode = useSettingsStore(s => s.viewMode);
   const keys = useRef({ w: false, a: false, s: false, d: false, shift: false });
   const velocity = useRef(new THREE.Vector3());
   const direction = useRef(new THREE.Vector3());
@@ -36,8 +37,13 @@ export const PresenceController = forwardRef((_, ref) => {
   // When room changes, we need to unlock if transitioning? Actually PointerLock automatically unlocks on Esc.
   // We should enforce the eye height initially just in case.
   useEffect(() => {
-    camera.position.y = eyeHeight;
-  }, [camera, eyeHeight]);
+    if (viewMode === 'explorer') {
+      camera.position.set(camera.position.x, 25, camera.position.z + 15);
+      camera.lookAt(camera.position.x, 0, camera.position.z - 15);
+    } else {
+      camera.position.y = eyeHeight;
+    }
+  }, [camera, eyeHeight, viewMode]);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -96,6 +102,8 @@ export const PresenceController = forwardRef((_, ref) => {
     }
 
     // Normal walking logic
+    if (viewMode === 'explorer') return; // Bypass first-person walking physics in Explorer Mode
+    
     if (!controlsRef.current || !controlsRef.current.isLocked) return;
     
     // Smooth inertia physics
@@ -183,6 +191,9 @@ export const PresenceController = forwardRef((_, ref) => {
   });
 
   return (
-    <PointerLockControls ref={controlsRef} pointerSpeed={mouseSensitivity} />
+    <>
+      {viewMode === 'immersive' && <PointerLockControls ref={controlsRef} pointerSpeed={mouseSensitivity} />}
+      {viewMode === 'explorer' && <OrbitControls ref={controlsRef} enablePan={true} enableZoom={true} enableRotate={true} makeDefault />}
+    </>
   );
 });
