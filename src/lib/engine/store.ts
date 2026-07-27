@@ -150,6 +150,8 @@ interface SettingsStore {
   setViewMode: (val: 'immersive' | 'explorer') => void;
   roomLights: Record<string, boolean>;
   toggleRoomLight: (room: string) => void;
+  explorerFloorLevel: number;
+  setExplorerFloorLevel: (level: number) => void;
 }
 
 export const useSettingsStore = create<SettingsStore>()(
@@ -171,6 +173,8 @@ export const useSettingsStore = create<SettingsStore>()(
       toggleRoomLight: (room) => set((state) => ({ 
         roomLights: { ...state.roomLights, [room]: !state.roomLights[room] } 
       })),
+      explorerFloorLevel: 3,
+      setExplorerFloorLevel: (level) => set({ explorerFloorLevel: level }),
     }),
     {
       name: 'settings-storage',

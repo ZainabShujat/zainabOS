@@ -25,48 +25,91 @@ export function ControlsUI() {
     );
   }
 
+  const explorerFloorLevel = useSettingsStore(s => s.explorerFloorLevel);
+  const setExplorerFloorLevel = useSettingsStore(s => s.setExplorerFloorLevel);
+
   return (
-    <div style={{
-      position: 'absolute', bottom: '20px', left: '20px', zIndex: 1000,
-      background: 'rgba(15,23,42,0.8)', color: '#f8fafc', border: '1px solid rgba(255,255,255,0.2)',
-      padding: '20px', borderRadius: '8px', fontFamily: 'monospace',
-      backdropFilter: 'blur(8px)', minWidth: '250px'
-    }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-        <h3 style={{ margin: 0, fontSize: '1.1rem', letterSpacing: '1px' }}>Controls</h3>
-        <button 
-          onClick={() => setIsOpen(false)}
-          style={{ background: 'transparent', border: 'none', color: '#94a3b8', cursor: 'pointer' }}
-        >
-          ✕
-        </button>
+    <>
+      <div style={{
+        position: 'absolute', bottom: '20px', left: '20px', zIndex: 1000,
+        background: 'rgba(15,23,42,0.8)', color: '#f8fafc', border: '1px solid rgba(255,255,255,0.2)',
+        padding: '20px', borderRadius: '8px', fontFamily: 'monospace',
+        backdropFilter: 'blur(8px)', minWidth: '250px'
+      }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+          <h3 style={{ margin: 0, fontSize: '1.1rem', letterSpacing: '1px' }}>Controls</h3>
+          <button 
+            onClick={() => setIsOpen(false)}
+            style={{ background: 'transparent', border: 'none', color: '#94a3b8', cursor: 'pointer' }}
+          >
+            ✕
+          </button>
+        </div>
+
+        {viewMode === 'immersive' ? (
+          <ul style={{ listStyle: 'none', padding: 0, margin: 0, fontSize: '0.9rem', lineHeight: '2' }}>
+            {sitTarget ? (
+              <>
+                <li><strong style={{ color: '#ef4444' }}>E</strong> - Stand Up</li>
+                <li><strong style={{ color: '#fbbf24' }}>Mouse</strong> - Look around</li>
+              </>
+            ) : (
+              <>
+                <li><strong style={{ color: '#fbbf24' }}>W A S D</strong> - Move around</li>
+                <li><strong style={{ color: '#fbbf24' }}>Mouse</strong> - Look around</li>
+                <li><strong style={{ color: '#fbbf24' }}>Shift</strong> - Walk faster</li>
+              </>
+            )}
+            <li><strong style={{ color: '#fbbf24' }}>Click</strong> - Interact with objects</li>
+            <li><strong style={{ color: '#fbbf24' }}>ESC</strong> - Unlock cursor</li>
+          </ul>
+        ) : (
+          <ul style={{ listStyle: 'none', padding: 0, margin: 0, fontSize: '0.9rem', lineHeight: '2' }}>
+            <li><strong style={{ color: '#38bdf8' }}>Left Click + Drag</strong> - Rotate Camera</li>
+            <li><strong style={{ color: '#38bdf8' }}>Right Click + Drag</strong> - Pan Camera</li>
+            <li><strong style={{ color: '#38bdf8' }}>Scroll Wheel</strong> - Zoom In/Out</li>
+            <li><strong style={{ color: '#38bdf8' }}>Click</strong> - Interact with objects</li>
+          </ul>
+        )}
       </div>
 
-      {viewMode === 'immersive' ? (
-        <ul style={{ listStyle: 'none', padding: 0, margin: 0, fontSize: '0.9rem', lineHeight: '2' }}>
-          {sitTarget ? (
-            <>
-              <li><strong style={{ color: '#ef4444' }}>E</strong> - Stand Up</li>
-              <li><strong style={{ color: '#fbbf24' }}>Mouse</strong> - Look around</li>
-            </>
-          ) : (
-            <>
-              <li><strong style={{ color: '#fbbf24' }}>W A S D</strong> - Move around</li>
-              <li><strong style={{ color: '#fbbf24' }}>Mouse</strong> - Look around</li>
-              <li><strong style={{ color: '#fbbf24' }}>Shift</strong> - Walk faster</li>
-            </>
-          )}
-          <li><strong style={{ color: '#fbbf24' }}>Click</strong> - Interact with objects</li>
-          <li><strong style={{ color: '#fbbf24' }}>ESC</strong> - Unlock cursor</li>
-        </ul>
-      ) : (
-        <ul style={{ listStyle: 'none', padding: 0, margin: 0, fontSize: '0.9rem', lineHeight: '2' }}>
-          <li><strong style={{ color: '#38bdf8' }}>Left Click + Drag</strong> - Rotate Camera</li>
-          <li><strong style={{ color: '#38bdf8' }}>Right Click + Drag</strong> - Pan Camera</li>
-          <li><strong style={{ color: '#38bdf8' }}>Scroll Wheel</strong> - Zoom In/Out</li>
-          <li><strong style={{ color: '#38bdf8' }}>Click</strong> - Interact with objects</li>
-        </ul>
+      {viewMode === 'explorer' && (
+        <div style={{
+          position: 'absolute', bottom: '20px', right: '20px', zIndex: 1000,
+          background: 'rgba(15,23,42,0.8)', color: '#f8fafc', border: '1px solid rgba(255,255,255,0.2)',
+          padding: '12px', borderRadius: '8px', fontFamily: 'monospace',
+          backdropFilter: 'blur(8px)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px'
+        }}>
+          <div style={{ fontSize: '0.8rem', color: '#94a3b8', marginBottom: '4px', textTransform: 'uppercase' }}>Floor Visibility</div>
+          <button 
+            disabled={explorerFloorLevel >= 3}
+            onClick={() => setExplorerFloorLevel(Math.min(3, explorerFloorLevel + 1))}
+            style={{ 
+              background: explorerFloorLevel >= 3 ? 'rgba(255,255,255,0.05)' : 'rgba(56, 189, 248, 0.2)', 
+              color: explorerFloorLevel >= 3 ? '#64748b' : '#38bdf8', 
+              border: '1px solid rgba(255,255,255,0.1)', borderRadius: '4px', padding: '8px 16px', cursor: explorerFloorLevel >= 3 ? 'default' : 'pointer', width: '100%' 
+            }}
+          >
+            ▲ Up
+          </button>
+          
+          <div style={{ fontSize: '1.2rem', fontWeight: 'bold', margin: '4px 0' }}>
+            {explorerFloorLevel === 3 ? 'ROOFS' : `FLOOR ${explorerFloorLevel + 1}`}
+          </div>
+
+          <button 
+            disabled={explorerFloorLevel <= 0}
+            onClick={() => setExplorerFloorLevel(Math.max(0, explorerFloorLevel - 1))}
+            style={{ 
+              background: explorerFloorLevel <= 0 ? 'rgba(255,255,255,0.05)' : 'rgba(56, 189, 248, 0.2)', 
+              color: explorerFloorLevel <= 0 ? '#64748b' : '#38bdf8', 
+              border: '1px solid rgba(255,255,255,0.1)', borderRadius: '4px', padding: '8px 16px', cursor: explorerFloorLevel <= 0 ? 'default' : 'pointer', width: '100%' 
+            }}
+          >
+            ▼ Down
+          </button>
+        </div>
       )}
-    </div>
+    </>
   );
 }
