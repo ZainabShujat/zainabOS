@@ -480,8 +480,9 @@ function EnclosedArchitecture() {
       <AnimatedDoor 
         position={[-1, -4, 22.8]} 
         rotation={[0, Math.PI, 0]} 
-        targetRoom="Hallway" 
-        label="[ Open Door to Hallway ]" 
+        targetRoom="Atrium" 
+        label="[ Return to Atrium ]" 
+        glowColor="#FFC857"
       />
 
       {/* Warm Amber Sconces (Night) */}
@@ -497,13 +498,13 @@ function EnclosedArchitecture() {
   );
 }
 
-export function StudyRoom() {
+export function StudyInterior() {
   const setFocusedObject = useVisitorStore(s => s.focusObject);
   const roomLights = useSettingsStore(s => s.roomLights);
   const isLightOn = roomLights['Study'];
 
   return (
-    <>
+    <group scale={0.4} position={[2, 1.6, -1]}>
       <ambientLight intensity={isLightOn ? 0.3 : 0.05} />
       {isLightOn && (
         <spotLight 
@@ -536,8 +537,7 @@ export function StudyRoom() {
         <Box args={[1, 0.05, 0.05]} position={[0, 1.2, 3.02]}><meshStandardMaterial color="#c0c0c0" /></Box>
       </group>
       
-      {/* The Enclosed Room Architecture (Walls, Roof, Window) */}
-      <EnclosedArchitecture />
+      {/* The Enclosed Room Architecture was removed to integrate into global mansion */}
 
       {/* The Desk Mat */}
       <mesh rotation={[-Math.PI / 2, 0, 0.02]} position={[-0.2, 0.005, 0.5]} receiveShadow>
@@ -570,6 +570,6 @@ export function StudyRoom() {
       <MessyOrganizers />
       <ScatteredObjects />
       <RoomFurniture />
-    </>
+    </group>
   );
 }

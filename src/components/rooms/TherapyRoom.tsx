@@ -11,7 +11,7 @@ function TherapyFurniture() {
   const setSitTarget = useVisitorStore(s => s.setSitTarget);
   const sessionBooked = useVisitorStore(s => s.sessionBooked);
   return (
-    <group position={[0, -4, 0]}>
+    <group position={[0, 0, 0]}>
       {/* Soft circular rug */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.05, 0]} receiveShadow>
         <circleGeometry args={[8, 64]} />
@@ -196,44 +196,13 @@ function GroundingStation() {
   );
 }
 
-export function TherapyRoom() {
+export function TherapyInterior() {
   const timeOfDay = useTimeStore(s => s.timeOfDay);
   const roomLights = useSettingsStore(s => s.roomLights);
   const isLightOn = roomLights['TherapyRoom'];
   
   return (
-    <group>
-      {/* The Room Architecture */}
-      {/* Floor */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -4, 0]} receiveShadow>
-        <planeGeometry args={[40, 40]} />
-        <meshStandardMaterial color="#1c1917" roughness={0.8} /> {/* Dark, warm wood floor */}
-      </mesh>
-      
-      {/* Walls */}
-      {/* Back Wall */}
-      <Box args={[40, 20, 1]} position={[0, 6, -20]} receiveShadow>
-        <meshStandardMaterial color="#c8b4e2" /> {/* Soft Lilac / Lavender */}
-      </Box>
-      {/* Right Wall */}
-      <Box args={[1, 20, 40]} position={[20, 6, 0]} receiveShadow>
-        <meshStandardMaterial color="#c8b4e2" />
-      </Box>
-      {/* Left Wall */}
-      <Box args={[1, 20, 40]} position={[-20, 6, 0]} receiveShadow>
-        <meshStandardMaterial color="#c8b4e2" />
-      </Box>
-      {/* Front Wall */}
-      <Box args={[40, 20, 1]} position={[0, 6, 20]} receiveShadow>
-        <meshStandardMaterial color="#c8b4e2" />
-      </Box>
-      {/* Ceiling */}
-      <mesh rotation={[Math.PI / 2, 0, 0]} position={[0, 16, 0]} receiveShadow>
-        <planeGeometry args={[40, 40]} />
-        <meshStandardMaterial color="#a08bc0" />
-      </mesh>
-
-      {/* The Light Switch near the door */}
+    <group scale={0.4} position={[2, -1.6, -1]}>
       <LightSwitch position={[0.5, -1, 3.9]} rotation={[0, Math.PI, 0]} roomName="TherapyRoom" />
 
       {/* Warm Ambient & Spot Lighting specific to this room */}
@@ -258,8 +227,9 @@ export function TherapyRoom() {
       <AnimatedDoor 
         position={[0, -4, 19.8]} 
         rotation={[0, Math.PI, 0]} 
-        targetRoom="Hallway" 
-        label="[ Back to Hallway ]" 
+        targetRoom="Atrium" 
+        label="[ Return to Atrium ]" 
+        glowColor="#9B59B6"
       />
       
       <ContactShadows resolution={1024} scale={30} blur={2.5} opacity={0.6} far={10} color="#000" position={[0, -3.9, 0]} />

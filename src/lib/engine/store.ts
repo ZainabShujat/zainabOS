@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 
 
 // ==========================================
@@ -47,10 +48,26 @@ export const useWeatherStore = create<WeatherState>((set) => ({
 // THE VISITOR ENGINE
 // ==========================================
 export type Room = 
-  | 'Study' | 'Hallway' | 'TherapyRoom' | 'ChroniclesLibrary' 
-  | 'FreelanceStudio' | 'GamingCorner' | 'MathCorner' | 'Garage' 
-  | 'CareerCampus' | 'AILab' | 'AstronomyCorner' | 'ThoughtOrchard' 
+  | 'Atrium' | 'Study' | 'WriterRoom' | 'AILab' | 'TherapyRoom'
+  | 'Observatory' | 'Library' | 'MathRoom' | 'Balcony'
+  | 'ServerRoom' | 'MemoryVault' | 'Archive' | 'ExperimentalLab'
+  // Legacy rooms kept for backward compatibility during migration
+  | 'Hallway' | 'ChroniclesLibrary' | 'FreelanceStudio' 
+  | 'GamingCorner' | 'MathCorner' | 'Garage' 
+  | 'CareerCampus' | 'AstronomyCorner' | 'ThoughtOrchard' 
   | 'Porch' | 'Garden' | 'ForestPath';
+
+// Arrival Sequence phases (Volume XVII)
+export type ArrivalPhase = 
+  | 'landing'        // ACT I: Title screen (SplashScreen)
+  | 'introText'      // ACT II: Welcome text overlays on black
+  | 'modeSelect'     // Mode selection (Immersive vs Explorer)
+  | 'flyIn'
+  | 'circling'
+  | 'training'       // ACT III: Orientation Room (Immersive)
+  | 'recommendation' // ACT IV: "What brings you here?"
+  | 'unlocking'      // ACT V: Doors unlock, lights ripple
+  | 'complete';      // Arrival is done, full control
 
 interface VisitorState {
   currentRoom: Room;
@@ -62,6 +79,7 @@ interface VisitorState {
   sitTarget: [number, number, number] | null;
   sitLookAt: [number, number, number] | null;
   sessionBooked: boolean;
+  arrivalPhase: ArrivalPhase;
   
   setRoom: (room: Room) => void;
   setIsTransitioning: (val: boolean) => void;
@@ -70,33 +88,49 @@ interface VisitorState {
   addToTrail: (entityId: string) => void;
   setSitTarget: (target: [number, number, number] | null, lookAt?: [number, number, number]) => void;
   setSessionBooked: (val: boolean) => void;
+  setArrivalPhase: (phase: ArrivalPhase) => void;
 }
 
-export const useVisitorStore = create<VisitorState>((set) => ({
-  currentRoom: 'Study',
-  previousRoom: null,
-  isTransitioning: false,
-  showMap: false,
-  focusedObjectId: null,
-  curiosityTrail: [],
-  sitTarget: null,
-  sitLookAt: null,
-  sessionBooked: false,
-  
-  setRoom: (room) => set((state) => ({ previousRoom: state.currentRoom, currentRoom: room })),
-  setIsTransitioning: (val) => set({ isTransitioning: val }),
-  setShowMap: (val) => set({ showMap: val }),
-  focusObject: (id) => set({ focusedObjectId: id }),
-  setSitTarget: (target, lookAt) => set({ sitTarget: target, sitLookAt: lookAt || null }),
-  setSessionBooked: (val) => set({ sessionBooked: val }),
-  addToTrail: (entityId) => set((state) => {
-    // Only add if it's not the most recent one to prevent duplicates
-    if (state.curiosityTrail[state.curiosityTrail.length - 1] !== entityId) {
-      return { curiosityTrail: [...state.curiosityTrail, entityId] };
+export const useVisitorStore = create<VisitorState>()(
+  persist(
+    (set) => ({
+      currentRoom: 'Atrium',
+      previousRoom: null,
+      isTransitioning: false,
+      showMap: false,
+      focusedObjectId: null,
+      curiosityTrail: [],
+      sitTarget: null,
+      sitLookAt: null,
+      sessionBooked: false,
+      arrivalPhase: 'landing', // Start with text intro
+      
+      setRoom: (room) => set((state) => ({ previousRoom: state.currentRoom, currentRoom: room })),
+      setIsTransitioning: (val) => set({ isTransitioning: val }),
+      setShowMap: (val) => set({ showMap: val }),
+      focusObject: (id) => set({ focusedObjectId: id }),
+      setSitTarget: (target, lookAt) => set({ sitTarget: target, sitLookAt: lookAt || null }),
+      setSessionBooked: (val) => set({ sessionBooked: val }),
+      setArrivalPhase: (phase) => set({ arrivalPhase: phase }),
+      addToTrail: (entityId) => set((state) => {
+        // Only add if it's not the most recent one to prevent duplicates
+        if (state.curiosityTrail[state.curiosityTrail.length - 1] !== entityId) {
+          return { curiosityTrail: [...state.curiosityTrail, entityId] };
+        }
+        return state;
+      }),
+    }),
+    {
+      name: 'visitor-storage',
+      partialize: (state) => ({
+        currentRoom: state.currentRoom,
+        arrivalPhase: state.arrivalPhase,
+        curiosityTrail: state.curiosityTrail,
+        sessionBooked: state.sessionBooked,
+      }), // Only persist specific fields
     }
-    return state;
-  }),
-}));
+  )
+);
 
 // ==========================================
 // THE SETTINGS ENGINE
@@ -118,21 +152,28 @@ interface SettingsStore {
   toggleRoomLight: (room: string) => void;
 }
 
-export const useSettingsStore = create<SettingsStore>((set) => ({
-  mouseSensitivity: 0.5, // lower default since default might be too fast
-  setMouseSensitivity: (val) => set({ mouseSensitivity: val }),
-  moveSpeed: 10,
-  setMoveSpeed: (val) => set({ moveSpeed: val }),
-  soundVolume: 0.5,
-  setSoundVolume: (val) => set({ soundVolume: val }),
-  graphicsQuality: 'High',
-  setGraphicsQuality: (val) => set({ graphicsQuality: val }),
-  fov: 45,
-  setFov: (val) => set({ fov: val }),
-  viewMode: 'immersive',
-  setViewMode: (val) => set({ viewMode: val }),
-  roomLights: { Study: true, Hallway: true, TherapyRoom: true, ChroniclesLibrary: true, FreelanceStudio: true, AILab: true },
-  toggleRoomLight: (room) => set((state) => ({ 
-    roomLights: { ...state.roomLights, [room]: !state.roomLights[room] } 
-  })),
-}));
+export const useSettingsStore = create<SettingsStore>()(
+  persist(
+    (set) => ({
+      mouseSensitivity: 0.5, // lower default since default might be too fast
+      setMouseSensitivity: (val) => set({ mouseSensitivity: val }),
+      moveSpeed: 10,
+      setMoveSpeed: (val) => set({ moveSpeed: val }),
+      soundVolume: 0.5,
+      setSoundVolume: (val) => set({ soundVolume: val }),
+      graphicsQuality: 'High',
+      setGraphicsQuality: (val) => set({ graphicsQuality: val }),
+      fov: 45,
+      setFov: (val) => set({ fov: val }),
+      viewMode: 'immersive',
+      setViewMode: (val) => set({ viewMode: val }),
+      roomLights: { Atrium: true, Study: true, TherapyRoom: true, WriterRoom: true, AILab: true },
+      toggleRoomLight: (room) => set((state) => ({ 
+        roomLights: { ...state.roomLights, [room]: !state.roomLights[room] } 
+      })),
+    }),
+    {
+      name: 'settings-storage',
+    }
+  )
+);

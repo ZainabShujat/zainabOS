@@ -43,19 +43,29 @@ export function LiveMapUI() {
           
           <div style={{ fontFamily: 'monospace', whiteSpace: 'pre', fontSize: '1rem', lineHeight: '1.5rem', color: '#64748b' }}>
 {`
-                   [Astronomy Corner]       [Math Corner]
-                             │                    │
-                      ┌──────┴────────────────────┴──────┐
-                      │                                  │
- [Chronicles Library] ├──          [The Hallway]         ┤── [AI Laboratory]
-                      │                                  │
-                      │                                  │
-       [Therapy Room] ├──                                ┤── [Freelance Studio]
-                      │                                  │
-                      └──────────────────┬───────────────┘
-                                         │
-                                      [Study]
-                                      (Foyer)
+                         ┌─────────────────────────┐
+                         │    🔒 UPPER FLOOR 🔒    │
+                         │  Observatory · Library   │
+                         │   Mathematics · Balcony  │
+                         └────────────┬────────────┘
+                                      │ Grand Staircase ↑
+                    ┌─────────────────┼─────────────────┐
+                    │                 │                  │
+   [Builder Wing]   │     ╔═══════════╧════════════╗    │  [Creative Wing]
+    ┌───────┐       │     ║                        ║    │       ┌───────────┐
+    │ Study │───────┤     ║    ENTRANCE ATRIUM     ║    ├───────│Writer Room│
+    │AI Lab │───────┤     ║     ✦ You Are Here ✦   ║    │       └───────────┘
+    └───────┘       │     ╚════════════╤═══════════╝    │
+                    │                  │                 │
+  [Reflection Wing] │                  │                 │
+    ┌────────────┐  │                  │                 │
+    │Therapy Room│──┘                  │                 │
+    └────────────┘            Grand Staircase ↓
+                         ┌─────────────┴───────────┐
+                         │   🔒 FOUNDATION 🔒      │
+                         │  Server · Memory Vault   │
+                         │   Archive · Exp. Lab     │
+                         └─────────────────────────┘
 `}
           </div>
 

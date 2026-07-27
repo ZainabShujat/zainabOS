@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import React, { useState, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Box, Cylinder, Text } from '@react-three/drei';
 import * as THREE from 'three';
@@ -10,9 +10,10 @@ interface AnimatedDoorProps {
   targetRoom: Room;
   label: string;
   glowColor?: string;
+  locked?: boolean;
 }
 
-export function AnimatedDoor({ position, rotation = [0, 0, 0], targetRoom, label, glowColor }: AnimatedDoorProps) {
+export function AnimatedDoor({ position, rotation = [0, 0, 0], targetRoom, label, glowColor, locked = false }: AnimatedDoorProps) {
   const [isOpen, setIsOpen] = useState(false);
   const setIsTransitioning = useVisitorStore((s) => s.setIsTransitioning);
   const setRoom = useVisitorStore((s) => s.setRoom);
@@ -22,7 +23,7 @@ export function AnimatedDoor({ position, rotation = [0, 0, 0], targetRoom, label
   const isNight = timeOfDay === 'Night' || timeOfDay === 'Golden Hour';
 
   const handleDoorClick = () => {
-    if (isOpen) return;
+    if (isOpen || locked) return;
     setIsOpen(true);
     // Let the door swing open for 0.8s, then trigger fade to black
     setTimeout(() => {
@@ -44,9 +45,11 @@ export function AnimatedDoor({ position, rotation = [0, 0, 0], targetRoom, label
   return (
     <group position={position} rotation={rotation}>
       {!isOpen && (
-        <Text position={[0, 10, 0.5]} fontSize={0.8} color="#fbbf24" outlineWidth={0.02} outlineColor="#000">
-          {label}
-        </Text>
+        <React.Suspense fallback={null}>
+          <Text position={[0, 10, 0.5]} fontSize={0.8} color="#fbbf24" outlineWidth={0.02} outlineColor="#000">
+            {label}
+          </Text>
+        </React.Suspense>
       )}
       
       {/* Door Frame (Stationary) */}

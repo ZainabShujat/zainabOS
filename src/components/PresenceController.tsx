@@ -5,11 +5,33 @@ import * as THREE from 'three';
 import { useSettingsStore, useVisitorStore } from '../lib/engine/store';
 import { playFootstep } from '../lib/audio';
 
+const S = 9; // Scale factor
+
+// These coordinates match the MansionArchitecture RoomBlocks * scale factor
+export const ROOM_SPAWNS: Record<string, [number, number, number]> = {
+  'Atrium': [0 * S, -0.8 * S, (8 - 15) * S],
+  'Study': [-11 * S, 2.4 * S, (4 - 15) * S],
+  'TherapyRoom': [-9 * S, -4 * S, (9 - 15) * S],
+  'SystemRoom': [-10 * S, -4 * S, (-5 - 15) * S],
+  'IdeaGarden': [9 * S, -4 * S, (-6.5 - 15) * S],
+  'ArchiveLibrary': [10 * S, -4 * S, (9.5 - 15) * S],
+  'CodeLab': [-9 * S, -0.8 * S, (-1 - 15) * S],
+  'AILab': [9 * S, -0.8 * S, (-1 - 15) * S],
+  'ProjectGallery': [-11.5 * S, -0.8 * S, (13.5 - 15) * S],
+  'RecreationRoom': [10 * S, -0.8 * S, (12.5 - 15) * S],
+  'Observatory': [0 * S, 2.4 * S, (-1.5 - 15) * S],
+  'WriterRoom': [-10.5 * S, 2.4 * S, (14 - 15) * S]
+};
+
 export const PresenceController = forwardRef((_, ref) => {
   const { camera, scene } = useThree();
-  const controlsRef = useRef<any>(null);
+  const pointerLockRef = useRef<any>(null);
+  const orbitRef = useRef<any>(null);
+  const isTransitioningCamera = useRef(false);
+  const transitionTarget = useRef(new THREE.Vector3(0, 80, 200));
   
   const sitTarget = useVisitorStore(s => s.sitTarget);
+  const currentRoom = useVisitorStore(s => s.currentRoom);
   
   useImperativeHandle(ref, () => ({
     setLookAt: (px: number, py: number, pz: number, tx: number, ty: number, tz: number) => {
@@ -18,7 +40,7 @@ export const PresenceController = forwardRef((_, ref) => {
     }
   }));
   
-  const moveSpeed = useSettingsStore(s => s.moveSpeed) * 0.5; // Tone down speed for walking
+  const moveSpeed = useSettingsStore(s => s.moveSpeed) * 3.0; // Increased speed for 9x larger house
   const soundVolume = useSettingsStore(s => s.soundVolume);
   const mouseSensitivity = useSettingsStore(s => s.mouseSensitivity);
   const viewMode = useSettingsStore(s => s.viewMode);
@@ -30,20 +52,28 @@ export const PresenceController = forwardRef((_, ref) => {
   const headBobTimer = useRef(0);
   
   // The door is 8.8 units tall. 4/5ths of the door height is roughly 7 units.
-  // Floor is at y = -4. 
-  // Standing eye height = -4 + 7.0 = 3.0
-  const eyeHeight = 3.0;
+  const standingHeight = 7.0;
 
-  // When room changes, we need to unlock if transitioning? Actually PointerLock automatically unlocks on Esc.
-  // We should enforce the eye height initially just in case.
+  // When room changes, teleport the camera to that room's coordinates
   useEffect(() => {
-    if (viewMode === 'explorer') {
-      camera.position.set(camera.position.x, 25, camera.position.z + 15);
-      camera.lookAt(camera.position.x, 0, camera.position.z - 15);
-    } else {
-      camera.position.y = eyeHeight;
+    if (ROOM_SPAWNS[currentRoom]) {
+      const [spawnX, spawnY, spawnZ] = ROOM_SPAWNS[currentRoom];
+      camera.position.set(spawnX, spawnY + standingHeight, spawnZ + 2); // Start slightly inside the room
+      camera.lookAt(spawnX, spawnY + standingHeight, spawnZ - 5);
+      
+      // Also update transition target for Explorer Mode
+      transitionTarget.current.set(spawnX, spawnY + 25, spawnZ + 15);
     }
-  }, [camera, eyeHeight, viewMode]);
+  }, [currentRoom, camera]);
+
+  useEffect(() => {
+    camera.far = 10000;
+    camera.updateProjectionMatrix();
+    if (viewMode === 'explorer') {
+      camera.position.set(camera.position.x, transitionTarget.current.y, transitionTarget.current.z);
+      camera.lookAt(camera.position.x, 0, camera.position.z - 15);
+    }
+  }, [camera, viewMode]);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -76,7 +106,7 @@ export const PresenceController = forwardRef((_, ref) => {
   const sitLookAt = useVisitorStore(s => s.sitLookAt);
   
   useEffect(() => {
-    if (sitTarget && sitLookAt && controlsRef.current) {
+    if (sitTarget && sitLookAt) {
       const dummy = new THREE.Camera();
       dummy.position.set(sitTarget[0], sitTarget[1], sitTarget[2]);
       dummy.lookAt(sitLookAt[0], sitLookAt[1], sitLookAt[2]);
@@ -88,7 +118,7 @@ export const PresenceController = forwardRef((_, ref) => {
 
   useFrame((state, delta) => {
     // Force raycaster to always shoot from the center of the screen
-    if (controlsRef.current && controlsRef.current.isLocked) {
+    if (pointerLockRef.current && pointerLockRef.current.isLocked) {
       state.pointer.set(0, 0);
       state.raycaster.setFromCamera(state.pointer, state.camera);
     }
@@ -102,9 +132,18 @@ export const PresenceController = forwardRef((_, ref) => {
     }
 
     // Normal walking logic
-    if (viewMode === 'explorer') return; // Bypass first-person walking physics in Explorer Mode
+    if (viewMode === 'explorer') {
+       if (isTransitioningCamera.current) {
+         camera.position.lerp(transitionTarget.current, 3 * delta);
+         const dist = camera.position.distanceTo(transitionTarget.current);
+         if (dist < 1.0) {
+            isTransitioningCamera.current = false;
+         }
+       }
+       return; // Bypass first-person walking physics in Explorer Mode
+    }
     
-    if (!controlsRef.current || !controlsRef.current.isLocked) return;
+    if (!pointerLockRef.current || !pointerLockRef.current.isLocked) return;
     
     // Smooth inertia physics
     velocity.current.x -= velocity.current.x * 10.0 * delta;
@@ -128,7 +167,7 @@ export const PresenceController = forwardRef((_, ref) => {
     const raycaster = new THREE.Raycaster();
     const currentPos = camera.position.clone();
     // Raycast at torso level to avoid hitting floor
-    currentPos.y = eyeHeight - 1.0; 
+    currentPos.y -= 1.0; 
     
     let canMoveX = true;
     let canMoveZ = true;
@@ -141,12 +180,12 @@ export const PresenceController = forwardRef((_, ref) => {
       dirX.y = 0; // Keep ray horizontal
       dirX.normalize();
       
-      raycaster.set(currentPos, dirX);
-      const hitsX = raycaster.intersectObjects(scene.children, true);
-      if (hitsX.length > 0 && hitsX[0].distance < 0.5) {
-        canMoveX = false;
-        velocity.current.x = 0; // Stop momentum
-      }
+      // raycaster.set(currentPos, dirX);
+      // const hitsX = raycaster.intersectObjects(scene.children, true);
+      // if (hitsX.length > 0 && hitsX[0].distance < 0.5) {
+      //   canMoveX = false;
+      //   velocity.current.x = 0; // Stop momentum
+      // }
     }
 
     // Check Z direction (Forward/Backward)
@@ -157,43 +196,72 @@ export const PresenceController = forwardRef((_, ref) => {
       dirZ.y = 0; // Keep ray horizontal
       dirZ.normalize();
       
-      raycaster.set(currentPos, dirZ);
-      const hitsZ = raycaster.intersectObjects(scene.children, true);
-      if (hitsZ.length > 0 && hitsZ[0].distance < 0.5) {
-        canMoveZ = false;
-        velocity.current.z = 0; // Stop momentum
-      }
+      // raycaster.set(currentPos, dirZ);
+      // const hitsZ = raycaster.intersectObjects(scene.children, true);
+      // if (hitsZ.length > 0 && hitsZ[0].distance < 0.5) {
+      //   canMoveZ = false;
+      //   velocity.current.z = 0; // Stop momentum
+      // }
     }
 
-    if (canMoveX) controlsRef.current.moveRight(dx);
-    if (canMoveZ) controlsRef.current.moveForward(dz);
+    if (canMoveX) pointerLockRef.current.moveRight(dx);
+    if (canMoveZ) pointerLockRef.current.moveForward(dz);
     
     // Head Bob calculation
     const speedSq = velocity.current.x * velocity.current.x + velocity.current.z * velocity.current.z;
     if (speedSq > 0.0001) {
       const prevTimer = headBobTimer.current;
-      headBobTimer.current += delta * 12; // Frequency of bob
+      // 2 steps/sec walking (6.28 freq), 3 steps/sec running (9.42 freq)
+      const bobFreq = keys.current.shift ? 9.42 : 6.28;
+      headBobTimer.current += delta * bobFreq; 
       
-      // Play footstep every time we cross PI (bottom/top of sine wave relative to steps)
-      // Actually a step is usually when the head is at its lowest point.
-      // Math.sin(t) is lowest at 3PI/2, 7PI/2, etc.
-      // An easier way: check if Math.floor(prevTimer / Math.PI) < Math.floor(headBobTimer.current / Math.PI)
+      // Play footstep every time we cross PI
       if (Math.floor(prevTimer / Math.PI) < Math.floor(headBobTimer.current / Math.PI)) {
          playFootstep(soundVolume);
       }
 
       // Subtle sine wave for Y bob
-      camera.position.y = eyeHeight + Math.sin(headBobTimer.current) * 0.04; 
+      const baseFloorY = ROOM_SPAWNS[currentRoom] ? ROOM_SPAWNS[currentRoom][1] : -4;
+      camera.position.y = baseFloorY + standingHeight + Math.sin(headBobTimer.current) * 0.04; 
     } else {
       // Smoothly return to standing still eye height
-      camera.position.y = THREE.MathUtils.lerp(camera.position.y, eyeHeight, 5 * delta);
+      const baseFloorY = ROOM_SPAWNS[currentRoom] ? ROOM_SPAWNS[currentRoom][1] : -4;
+      camera.position.y = THREE.MathUtils.lerp(camera.position.y, baseFloorY + standingHeight, 5 * delta);
     }
   });
 
+  const arrivalPhase = useVisitorStore(s => s.arrivalPhase);
+  
+  // Set initial camera position for explorer mode once when it activates
+  useEffect(() => {
+    if (viewMode === 'explorer') {
+      isTransitioningCamera.current = true;
+      // We don't instantly snap anymore, the lerp handles it
+      // but we do need OrbitControls to look at center
+      if (orbitRef.current) {
+        orbitRef.current.target.set(0,0,0);
+      }
+    }
+  }, [viewMode, camera]);
+
   return (
     <>
-      {viewMode === 'immersive' && <PointerLockControls ref={controlsRef} pointerSpeed={mouseSensitivity} />}
-      {viewMode === 'explorer' && <OrbitControls ref={controlsRef} enablePan={true} enableZoom={true} enableRotate={true} makeDefault />}
+      {(arrivalPhase === 'training' || arrivalPhase === 'complete') && viewMode === 'immersive' && (
+        <PointerLockControls 
+          key={sitTarget ? sitTarget.join(',') : 'standing'} 
+          ref={pointerLockRef} 
+          pointerSpeed={mouseSensitivity} 
+        />
+      )}
+      {(arrivalPhase === 'training' || arrivalPhase === 'complete') && viewMode === 'explorer' && (
+        <OrbitControls 
+          ref={orbitRef} 
+          enablePan={true} 
+          enableZoom={true} 
+          enableRotate={true} 
+          makeDefault 
+        />
+      )}
     </>
   );
 });
